@@ -43,7 +43,7 @@
         <div class="relative">
           <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar por SN / N.º Ativo / Hostname</label>
           <input type="text" id="campoBusca" oninput="buscarAtivoDinamico(this.value)" placeholder="Digite para buscar e exibir opções..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
-          <!-- Lista Flutuante de Resultados da Busca -->
+          <!-- Lista Flutuante de Resultados -->
           <div id="listaSugestoes" class="absolute left-0 right-0 bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto z-50 hidden"></div>
         </div>
 
@@ -61,21 +61,38 @@
             </div>
           </div>
 
-          <!-- Modelo com opção de digitar e menu suspenso -->
+          <!-- Campo de Modelo com Datalist -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo (Digite para buscar ou selecione no menu)</label>
-            <input list="listaModelosSugeridos" id="fieldModelo" placeholder="Digite ou selecione o modelo..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo (Digite ou escolha da lista)</label>
+            <input list="listaModelosSugeridos" id="fieldModelo" placeholder="Digite para buscar ou selecione..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
             <datalist id="listaModelosSugeridos">
+              <!-- Notebooks e Workstations -->
+              <option value="Latitude 5480">
+              <option value="Latitude 7280">
+              <option value="Latitude 7290">
+              <option value="Latitude 7370">
               <option value="Latitude 7410">
               <option value="Latitude 7420">
               <option value="Latitude 7440">
               <option value="Latitude 7450">
+              <option value="Latitude 7490">
+              <option value="Precision 7510">
+              <option value="Precision 7730">
               <option value="Pro 14 Plus">
               <option value="Workstation">
               <option value="Notebook Mod. Anteriores (7400/7490/Outros)">
+              <!-- Monitores -->
+              <option value="Samsung - S23B550V">
+              <option value="Samsung - S23A550H">
+              <option value="Samsung - S22B300B">
+              <option value="DELL - P2211H">
+              <option value="DELL - E1910C">
+              <option value="DELL - D2201RC">
+              <option value="Samsung - Sem etiqueta">
               <option value="Monitor Dell P2417H">
               <option value="Monitor LG 24MK430H">
               <option value="Monitor Samsung Essential S4">
+              <!-- Celulares e Tablets -->
               <option value="Celular Motorola G10">
               <option value="Celular Motorola G22">
               <option value="Celular Samsung A36">
@@ -88,7 +105,7 @@
             <input type="text" id="fieldNomePC" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
           </div>
 
-          <!-- Formatação (Seleção Única) -->
+          <!-- Formatação (AECOM / Formatado) -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Formatação</label>
             <div class="grid grid-cols-2 gap-2">
@@ -101,15 +118,25 @@
             </div>
           </div>
 
-          <!-- Status / Condição -->
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Status / Condição</label>
-            <select id="fieldCondicao" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
-              <option value="OK / Operacional">OK / Operacional</option>
-              <option value="MS-SP">MS-SP</option>
-              <option value="Defeito / Manutenção">Defeito / Manutenção</option>
-              <option value="Defeito / Manutenção MS-SP">Defeito / Manutenção MS-SP</option>
-            </select>
+          <div class="grid grid-cols-2 gap-2">
+            <!-- Condição -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Condição</label>
+              <select id="fieldCondicao" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                <option value="Venda funcionário">Venda funcionário</option>
+                <option value="Descarte">Descarte</option>
+              </select>
+            </div>
+            <!-- Status -->
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
+              <select id="fieldStatus" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+                <option value="Bom estado">Bom estado</option>
+                <option value="Bom">Bom</option>
+                <option value="Defeito/Manutenção">Defeito/Manutenção</option>
+                <option value="Ruim">Ruim</option>
+              </select>
+            </div>
           </div>
 
           <!-- Observações Rápidas -->
@@ -205,7 +232,6 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // Busca Dinâmica conforme digita (exibe lista suspensa com opções correspondentes)
     function buscarAtivoDinamico(termo) {
       const container = document.getElementById('listaSugestoes');
       if (!termo || termo.trim().length === 0 || bancoDados.length === 0) {
@@ -282,7 +308,8 @@
         "Modelo": document.getElementById('fieldModelo').value,
         "Nome do Computador": document.getElementById('fieldNomePC').value,
         "Formatação": statusSelecionado,
-        "Status / Condição": document.getElementById('fieldCondicao').value,
+        "Condição": document.getElementById('fieldCondicao').value,
+        "Status": document.getElementById('fieldStatus').value,
         "Observações": document.getElementById('fieldObs').value,
         "Data/Hora": new Date().toLocaleString('pt-BR')
       };
