@@ -66,7 +66,6 @@
             <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo (Digite ou escolha da lista)</label>
             <input list="listaModelosSugeridos" id="fieldModelo" placeholder="Digite para buscar ou selecione..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
             <datalist id="listaModelosSugeridos">
-              <!-- Notebooks e Workstations -->
               <option value="Latitude 5480">
               <option value="Latitude 7280">
               <option value="Latitude 7290">
@@ -81,7 +80,6 @@
               <option value="Pro 14 Plus">
               <option value="Workstation">
               <option value="Notebook Mod. Anteriores (7400/7490/Outros)">
-              <!-- Monitores -->
               <option value="Samsung - S23B550V">
               <option value="Samsung - S23A550H">
               <option value="Samsung - S22B300B">
@@ -92,7 +90,6 @@
               <option value="Monitor Dell P2417H">
               <option value="Monitor LG 24MK430H">
               <option value="Monitor Samsung Essential S4">
-              <!-- Celulares e Tablets -->
               <option value="Celular Motorola G10">
               <option value="Celular Motorola G22">
               <option value="Celular Samsung A36">
@@ -160,12 +157,18 @@
 
     <!-- ABA 2: ESTOQUE GERAL -->
     <div id="abaEstoque" class="space-y-4 hidden">
-      <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <div class="flex justify-between items-center border-b pb-2 mb-3">
+      <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+        <div class="flex justify-between items-center border-b pb-2">
           <h2 class="font-bold text-base text-slate-800">Contagem de Estoque</h2>
           <button onclick="adicionarItemPersonalizado()" class="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-lg border border-blue-200">+ Novo Item</button>
         </div>
-        <div id="listaEstoque" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+
+        <!-- Botão de Salvar Contagem Acumulada -->
+        <button onclick="salvarContagemEstoque()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition-colors text-sm flex items-center justify-center gap-2">
+          📥 Salvar / Acumular Contagem Atual
+        </button>
+
+        <div id="listaEstoque" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
           <!-- Itens injetados via Script -->
         </div>
       </section>
@@ -177,6 +180,7 @@
     let bancoDados = [];
     let relatorioAtivos = [];
 
+    // Lista base de itens do estoque
     let estoqueItens = [
       "Adaptador RJ45", "Ajuste Altura Monitor", "Almofada de Fone (Headset) - UN", 
       "Apoio de punho P/ teclado", "Cabo HDMI", "Cartão de Memória MicroSD 128GB", 
@@ -217,7 +221,7 @@
       "Pen drive 32GB fit", "Pen drive 64GB data travel", "Pen drive 128GB", 
       "Suporte para notebook", "Tablet - Defeito/Manutenção", "Tablet S10+", 
       "Tablet S5+", "Tablet S6+", "Teclado"
-    ].map(nome => ({ item: nome, qtd: 0 }));
+    ].map(nome => ({ item: nome, digitando: 0, salvo: 0 }));
 
     function carregarBancoDados(event) {
       const file = event.target.files[0];
@@ -316,7 +320,6 @@
 
       relatorioAtivos.push(registro);
 
-      // Limpar formulário
       document.getElementById('campoBusca').value = '';
       document.getElementById('fieldAtivo').value = '';
       document.getElementById('fieldSN').value = '';
@@ -335,10 +338,13 @@
       estoqueItens.forEach((item, index) => {
         container.innerHTML += `
           <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
-            <span class="font-medium text-xs text-slate-700 pr-2">${item.item}</span>
+            <div class="pr-2">
+              <span class="font-medium text-xs text-slate-700 block">${item.item}</span>
+              <span class="text-[10px] text-emerald-600 font-semibold">Salvo: ${item.salvo}</span>
+            </div>
             <div class="flex items-center gap-2 shrink-0">
               <button onclick="alterarQtdEstoque(${index}, -1)" class="w-7 h-7 bg-slate-200 text-slate-700 font-bold rounded hover:bg-slate-300">-</button>
-              <span class="font-bold text-sm w-6 text-center">${item.qtd}</span>
+              <span class="font-bold text-sm w-6 text-center">${item.digitando}</span>
               <button onclick="alterarQtdEstoque(${index}, 1)" class="w-7 h-7 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">+</button>
             </div>
           </div>
@@ -347,16 +353,35 @@
     }
 
     function alterarQtdEstoque(index, delta) {
-      if (estoqueItens[index].qtd + delta >= 0) {
-        estoqueItens[index].qtd += delta;
+      if (estoqueItens[index].digitando + delta >= 0) {
+        estoqueItens[index].digitando += delta;
         renderizarEstoque();
+      }
+    }
+
+    // Salvar e Acumular com o anterior
+    function salvarContagemEstoque() {
+      let alterado = false;
+      estoqueItens.forEach(item => {
+        if (item.digitando > 0) {
+          item.salvo += item.digitando; // Soma com o que já estava salvo
+          item.digitando = 0; // Zera o contador de digitação atual
+          alterado = true;
+        }
+      });
+
+      if (alterado) {
+        renderizarEstoque();
+        alert("✓ Contagem salva e acumulada com sucesso!");
+      } else {
+        alert("Adicione quantidade em algum item antes de salvar.");
       }
     }
 
     function adicionarItemPersonalizado() {
       const nomeItem = prompt("Digite o nome do novo item:");
       if (nomeItem && nomeItem.trim() !== "") {
-        estoqueItens.unshift({ item: nomeItem.trim(), qtd: 1 });
+        estoqueItens.unshift({ item: nomeItem.trim(), digitando: 1, salvo: 0 });
         renderizarEstoque();
       }
     }
@@ -376,7 +401,13 @@
     }
 
     function exportarExcel() {
-      if (relatorioAtivos.length === 0 && estoqueItens.every(i => i.qtd === 0)) {
+      // Considera apenas itens que possuem saldo salvo na aba de estoque
+      const itensComEstoque = estoqueItens.filter(i => i.salvo > 0).map(i => ({
+        "Item": i.item,
+        "Quantidade Total": i.salvo
+      }));
+
+      if (relatorioAtivos.length === 0 && itensComEstoque.length === 0) {
         alert("Nenhum registro para exportar!");
         return;
       }
@@ -388,7 +419,6 @@
         XLSX.utils.book_append_sheet(wb, wsAtivos, "Notebooks & Ativos");
       }
 
-      const itensComEstoque = estoqueItens.filter(i => i.qtd > 0);
       if (itensComEstoque.length > 0) {
         const wsEstoque = XLSX.utils.json_to_sheet(itensComEstoque);
         XLSX.utils.book_append_sheet(wb, wsEstoque, "Contagem de Estoque");
