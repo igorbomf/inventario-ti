@@ -39,9 +39,12 @@
       <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
         <h2 class="font-bold text-base text-slate-800 border-b pb-2">Identificar Equipamento</h2>
         
-        <div>
+        <!-- Busca Dinâmica com Sugestões -->
+        <div class="relative">
           <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar por SN / N.º Ativo / Hostname</label>
-          <input type="text" id="campoBusca" oninput="buscarAtivo(this.value)" placeholder="Digite para preencher automático..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
+          <input type="text" id="campoBusca" oninput="buscarAtivoDinamico(this.value)" placeholder="Digite para buscar e exibir opções..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
+          <!-- Lista Flutuante de Resultados da Busca -->
+          <div id="listaSugestoes" class="absolute left-0 right-0 bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-48 overflow-y-auto z-50 hidden"></div>
         </div>
 
         <hr class="my-2">
@@ -58,29 +61,34 @@
             </div>
           </div>
 
-          <!-- Seleção de Modelo com opção personalizada -->
+          <!-- Modelo com opção de digitar e menu suspenso -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo</label>
-            <select id="fieldModeloSelect" onchange="verificarNovoModelo(this.value)" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm mb-1">
-              <option value="">Selecione um modelo...</option>
-              <option value="Latitude 7410">Latitude 7410</option>
-              <option value="Latitude 7420">Latitude 7420</option>
-              <option value="Latitude 7440">Latitude 7440</option>
-              <option value="Latitude 7450">Latitude 7450</option>
-              <option value="Pro 14 Plus">Pro 14 Plus</option>
-              <option value="Workstation">Workstation</option>
-              <option value="Modelo Anterior (7400/7490/Outros)">Modelo Anterior (7400/7490/Outros)</option>
-              <option value="__outro__">✏️ Outro modelo (Digitar)...</option>
-            </select>
-            <input type="text" id="fieldModeloManual" placeholder="Digite o novo modelo..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm hidden">
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo (Digite para buscar ou selecione no menu)</label>
+            <input list="listaModelosSugeridos" id="fieldModelo" placeholder="Digite ou selecione o modelo..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+            <datalist id="listaModelosSugeridos">
+              <option value="Latitude 7410">
+              <option value="Latitude 7420">
+              <option value="Latitude 7440">
+              <option value="Latitude 7450">
+              <option value="Pro 14 Plus">
+              <option value="Workstation">
+              <option value="Notebook Mod. Anteriores (7400/7490/Outros)">
+              <option value="Monitor Dell P2417H">
+              <option value="Monitor LG 24MK430H">
+              <option value="Monitor Samsung Essential S4">
+              <option value="Celular Motorola G10">
+              <option value="Celular Motorola G22">
+              <option value="Celular Samsung A36">
+              <option value="Tablet S10+">
+            </datalist>
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Computador / Hostname</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do Computador</label>
             <input type="text" id="fieldNomePC" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
           </div>
 
-          <!-- Flexbox AECOM vs Formatado -->
+          <!-- Formatação (Seleção Única) -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Formatação</label>
             <div class="grid grid-cols-2 gap-2">
@@ -93,7 +101,7 @@
             </div>
           </div>
 
-          <!-- Condição / Status -->
+          <!-- Status / Condição -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Status / Condição</label>
             <select id="fieldCondicao" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
@@ -142,7 +150,6 @@
     let bancoDados = [];
     let relatorioAtivos = [];
 
-    // Lista Completa do seu Estoque Atual
     let estoqueItens = [
       "Adaptador RJ45", "Ajuste Altura Monitor", "Almofada de Fone (Headset) - UN", 
       "Apoio de punho P/ teclado", "Cabo HDMI", "Cartão de Memória MicroSD 128GB", 
@@ -198,42 +205,51 @@
       reader.readAsArrayBuffer(file);
     }
 
-    function buscarAtivo(termo) {
-      if (!termo || termo.trim() === '') return;
+    // Busca Dinâmica conforme digita (exibe lista suspensa com opções correspondentes)
+    function buscarAtivoDinamico(termo) {
+      const container = document.getElementById('listaSugestoes');
+      if (!termo || termo.trim().length === 0 || bancoDados.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return;
+      }
+
       const t = termo.toLowerCase().trim();
-      const item = bancoDados.find(row => {
+      const resultados = bancoDados.filter(row => {
         const ativo = String(row['Ativo'] || row['N_Ativo'] || row['Nº de Ativo'] || '').toLowerCase();
         const sn = String(row['SN'] || row['Serial'] || row['N_Serie'] || '').toLowerCase();
         const nome = String(row['Nome'] || row['Nome_PC'] || row['Host'] || '').toLowerCase();
         return ativo.includes(t) || sn.includes(t) || nome.includes(t);
       });
 
-      if (item) {
-        document.getElementById('fieldAtivo').value = item['Ativo'] || item['N_Ativo'] || item['Nº de Ativo'] || '';
-        document.getElementById('fieldSN').value = item['SN'] || item['Serial'] || item['N_Serie'] || '';
-        document.getElementById('fieldNomePC').value = item['Nome'] || item['Nome_PC'] || item['Host'] || '';
-        document.getElementById('fieldObs').value = item['Observacao'] || item['Obs'] || '';
-        
-        const mod = item['Modelo'] || item['Model'] || '';
-        const select = document.getElementById('fieldModeloSelect');
-        if (Array.from(select.options).some(o => o.value === mod)) {
-          select.value = mod;
-          verificarNovoModelo(mod);
-        } else if (mod !== '') {
-          select.value = '__outro__';
-          verificarNovoModelo('__outro__');
-          document.getElementById('fieldModeloManual').value = mod;
-        }
+      if (resultados.length > 0) {
+        container.innerHTML = '';
+        resultados.forEach(item => {
+          const ativoVal = item['Ativo'] || item['N_Ativo'] || item['Nº de Ativo'] || 'S/Nº';
+          const snVal = item['SN'] || item['Serial'] || item['N_Serie'] || 'S/SN';
+          const nomeVal = item['Nome'] || item['Nome_PC'] || item['Host'] || 'S/Nome';
+          
+          const div = document.createElement('div');
+          div.className = "p-2.5 hover:bg-blue-50 border-b border-slate-100 cursor-pointer text-xs";
+          div.innerHTML = `<strong>Ativo:</strong> ${ativoVal} | <strong>SN:</strong> ${snVal} | <strong>Nome:</strong> ${nomeVal}`;
+          div.onclick = () => preencherCamposAtivo(item);
+          container.appendChild(div);
+        });
+        container.classList.remove('hidden');
+      } else {
+        container.classList.add('hidden');
       }
     }
 
-    function verificarNovoModelo(val) {
-      const manualInput = document.getElementById('fieldModeloManual');
-      if (val === '__outro__') {
-        manualInput.classList.remove('hidden');
-      } else {
-        manualInput.classList.add('hidden');
-      }
+    function preencherCamposAtivo(item) {
+      document.getElementById('fieldAtivo').value = item['Ativo'] || item['N_Ativo'] || item['Nº de Ativo'] || '';
+      document.getElementById('fieldSN').value = item['SN'] || item['Serial'] || item['N_Serie'] || '';
+      document.getElementById('fieldModelo').value = item['Modelo'] || item['Model'] || '';
+      document.getElementById('fieldNomePC').value = item['Nome'] || item['Nome_PC'] || item['Host'] || '';
+      document.getElementById('fieldObs').value = item['Observacao'] || item['Obs'] || '';
+      
+      document.getElementById('listaSugestoes').classList.add('hidden');
+      document.getElementById('campoBusca').value = '';
     }
 
     function atualizarEstiloRadio() {
@@ -260,18 +276,13 @@
       let statusSelecionado = '';
       radios.forEach(r => { if(r.checked) statusSelecionado = r.value; });
 
-      let modeloFinal = document.getElementById('fieldModeloSelect').value;
-      if (modeloFinal === '__outro__') {
-        modeloFinal = document.getElementById('fieldModeloManual').value;
-      }
-
       const registro = {
         "Nº Ativo": document.getElementById('fieldAtivo').value,
         "Serial Number (SN)": document.getElementById('fieldSN').value,
-        "Modelo": modeloFinal,
+        "Modelo": document.getElementById('fieldModelo').value,
         "Nome do Computador": document.getElementById('fieldNomePC').value,
-        "Classificação": statusSelecionado,
-        "Condição / Status": document.getElementById('fieldCondicao').value,
+        "Formatação": statusSelecionado,
+        "Status / Condição": document.getElementById('fieldCondicao').value,
         "Observações": document.getElementById('fieldObs').value,
         "Data/Hora": new Date().toLocaleString('pt-BR')
       };
@@ -282,9 +293,7 @@
       document.getElementById('campoBusca').value = '';
       document.getElementById('fieldAtivo').value = '';
       document.getElementById('fieldSN').value = '';
-      document.getElementById('fieldModeloSelect').value = '';
-      document.getElementById('fieldModeloManual').value = '';
-      document.getElementById('fieldModeloManual').classList.add('hidden');
+      document.getElementById('fieldModelo').value = '';
       document.getElementById('fieldNomePC').value = '';
       document.getElementById('fieldObs').value = '';
       radios.forEach(r => r.checked = false);
