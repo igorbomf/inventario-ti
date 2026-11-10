@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inventário & Estoque Mobile</title>
+  <!-- Tailwind CSS para visual moderno e responsivo -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS para leitura e geração de arquivos Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans pb-24">
+
+  <!-- Cabeçalho -->
+  <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
+    <h1 class="font-bold text-lg">📱 Inventário TI</h1>
+    <button onclick="exportarExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow flex items-center gap-1">
+      📊 Exportar Excel
+    </button>
+  </header>
+
+  <main class="max-w-md mx-auto p-4 space-y-6">
+
+    <!-- Seção 1: Importar Banco de Dados Atual -->
+    <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+      <h2 class="font-bold text-sm text-slate-600 mb-2 uppercase tracking-wide">1. Banco de Dados Base</h2>
+      <label class="block text-xs text-slate-500 mb-1">Carregar planilha atual (.xlsx ou .csv):</label>
+      <input type="file" id="dbFileInput" accept=".xlsx, .xls, .csv" onchange="carregarBancoDados(event)" class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+      <p id="dbStatus" class="text-xs text-emerald-600 font-medium mt-2 hidden">✓ Banco de dados carregado com sucesso!</p>
+    </section>
+
+    <!-- NAVEGAÇÃO ENTRE ABAS -->
+    <div class="flex border-b border-slate-300">
+      <button id="tabAtivosBtn" onclick="alternarAba('ativos')" class="flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600">Notebooks & Ativos</button>
+      <button id="tabEstoqueBtn" onclick="alternarAba('estoque')" class="flex-1 py-2 text-center font-bold text-slate-400 border-b-0">Periféricos & Estoque</button>
+    </div>
+
+    <!-- ABA 1: NOTEBOOKS E ATIVOS -->
+    <div id="abaAtivos" class="space-y-4">
+      <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+        <h2 class="font-bold text-base text-slate-800 border-b pb-2">Buscar / Identificar Notebook</h2>
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">SN, Nº de Ativo ou Nome do PC</label>
+          <input type="text" id="campoBusca" oninput="buscarAtivo(this.value)" placeholder="Digite para buscar automaticamente..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
+        </div>
+
+        <hr class="my-2">
+
+        <!-- Formulário do Ativo -->
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nº de Ativo</label>
+              <input type="text" id="fieldAtivo" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Serial Number (SN)</label>
+              <input type="text" id="fieldSN" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm font-mono">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo</label>
+              <input type="text" id="fieldModelo" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do PC</label>
+              <input type="text" id="fieldNomePC" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
+            </div>
+          </div>
+
+          <!-- TIPO DE CONFIGURAÇÃO (FLEXBOX / SELEÇÃO ÚNICA) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Classificação (Seleção Única)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label id="btnAECOM" class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer font-bold text-slate-600 transition-all select-none">
+                <input type="radio" name="tipoStatus" value="AECOM" onchange="atualizarEstiloRadio()" class="hidden"> AECOM
+              </label>
+              <label id="btnFormatado" class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer font-bold text-slate-600 transition-all select-none">
+                <input type="radio" name="tipoStatus" value="Formatado" onchange="atualizarEstiloRadio()" class="hidden"> Formatado
+              </label>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Condição</label>
+            <select id="fieldCondicao" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
+              <option value="Em Uso / Bom">Em Uso / Bom</option>
+              <option value="Excelente (Estoque)">Excelente (Estoque)</option>
+              <option value="Manutenção / Defeito">Manutenção / Defeito</option>
+              <option value="Descarte / Sucata">Descarte / Sucata</option>
+            </select>
+          </div>
+
+          <!-- Tags Rápidas de Defeito -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Atalhos de Observação</label>
+            <div class="flex flex-wrap gap-1.5 mb-2">
+              <button type="button" onclick="addObsTag('Teclado ruim')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Teclado ruim</button>
+              <button type="button" onclick="addObsTag('Tela queimada/quebrada')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Tela danificada</button>
+              <button type="button" onclick="addObsTag('Bateria viciada')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Bateria viciada</button>
+              <button type="button" onclick="addObsTag('Sem carregador')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Sem carregador</button>
+            </div>
+            <textarea id="fieldObs" rows="2" placeholder="Observações adicionais..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm"></textarea>
+          </div>
+
+          <button onclick="salvarAtivo()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-colors">
+            💾 Salvar Registros do Notebook
+          </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 2: PERIFÉRICOS E ESTOQUE -->
+    <div id="abaEstoque" class="space-y-4 hidden">
+      <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <h2 class="font-bold text-base text-slate-800 border-b pb-2 mb-3">Contagem de Periféricos</h2>
+        <div id="listaEstoque" class="space-y-3">
+          <!-- Itens injetados via JavaScript -->
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- LÓGICA EM JAVASCRIPT -->
+  <script>
+    let bancoDados = [];
+    let relatorioAtivos = [];
+    let estoquePerifericos = [
+      { item: "Mouse USB / Sem Fio", qtd: 0 },
+      { item: "Teclado USB", qtd: 0 },
+      { item: "Cabo HDMI", qtd: 0 },
+      { item: "Carregador / Fonte Notebook", qtd: 0 },
+      { item: "Adaptador DisplayPort / HDMI", qtd: 0 },
+      { item: "Headset / Fone de Ouvido", qtd: 0 }
+    ];
+
+    // Carregar Planilha Base (.xlsx/.csv)
+    function carregarBancoDados(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[firstSheetName];
+        bancoDados = XLSX.utils.sheet_to_json(worksheet);
+        document.getElementById('dbStatus').classList.remove('hidden');
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Autocompletar Busca
+    function buscarAtivo(termo) {
+      if (!termo || termo.trim() === '') return;
+      const t = termo.toLowerCase().trim();
+
+      const itemEncontrado = bancoDados.find(row => {
+        const ativo = String(row['Ativo'] || row['N_Ativo'] || row['Nº de Ativo'] || '').toLowerCase();
+        const sn = String(row['SN'] || row['Serial'] || row['N_Serie'] || '').toLowerCase();
+        const nome = String(row['Nome'] || row['Nome_PC'] || row['Host'] || '').toLowerCase();
+        return ativo.includes(t) || sn.includes(t) || nome.includes(t);
+      });
+
+      if (itemEncontrado) {
+        document.getElementById('fieldAtivo').value = itemEncontrado['Ativo'] || itemEncontrado['N_Ativo'] || itemEncontrado['Nº de Ativo'] || '';
+        document.getElementById('fieldSN').value = itemEncontrado['SN'] || itemEncontrado['Serial'] || itemEncontrado['N_Serie'] || '';
+        document.getElementById('fieldModelo').value = itemEncontrado['Modelo'] || itemEncontrado['Model'] || '';
+        document.getElementById('fieldNomePC').value = itemEncontrado['Nome'] || itemEncontrado['Nome_PC'] || itemEncontrado['Host'] || '';
+        document.getElementById('fieldObs').value = itemEncontrado['Observacao'] || itemEncontrado['Obs'] || '';
+      }
+    }
+
+    // Estilo Flexbox / Radio Buttons (AECOM vs Formatado)
+    function atualizarEstiloRadio() {
+      const radios = document.getElementsByName('tipoStatus');
+      radios.forEach(radio => {
+        const parent = radio.parentElement;
+        if (radio.checked) {
+          parent.classList.add('border-blue-600', 'bg-blue-50', 'text-blue-700');
+          parent.classList.remove('border-slate-200', 'text-slate-600');
+        } else {
+          parent.classList.remove('border-blue-600', 'bg-blue-50', 'text-blue-700');
+          parent.classList.add('border-slate-200', 'text-slate-600');
+        }
+      });
+    }
+
+    function addObsTag(tag) {
+      const obsInput = document.getElementById('fieldObs');
+      if (obsInput.value.length > 0) {
+        obsInput.value += ', ' + tag;
+      } else {
+        obsInput.value = tag;
+      }
+    }
+
+    // Salvar Registro na Lista
+    function salvarAtivo() {
+      const radios = document.getElementsByName('tipoStatus');
+      let statusSelecionado = '';
+      radios.forEach(r => { if(r.checked) statusSelecionado = r.value; });
+
+      const registro = {
+        "Nº Ativo": document.getElementById('fieldAtivo').value,
+        "Serial Number (SN)": document.getElementById('fieldSN').value,
+        "Modelo": document.getElementById('fieldModelo').value,
+        "Nome do Computador": document.getElementById('fieldNomePC').value,
+        "Classificação": statusSelecionado,
+        "Condição": document.getElementById('fieldCondicao').value,
+        "Observações": document.getElementById('fieldObs').value,
+        "Data/Hora Registro": new Date().toLocaleString('pt-BR')
+      };
+
+      relatorioAtivos.push(registro);
+
+      // Limpar formulário para o próximo
+      document.getElementById('campoBusca').value = '';
+      document.getElementById('fieldAtivo').value = '';
+      document.getElementById('fieldSN').value = '';
+      document.getElementById('fieldModelo').value = '';
+      document.getElementById('fieldNomePC').value = '';
+      document.getElementById('fieldObs').value = '';
+      radios.forEach(r => r.checked = false);
+      atualizarEstiloRadio();
+
+      alert("✓ Ativo salvo na lista!");
+    }
+
+    // Renderizar Lista de Estoque
+    function renderizarEstoque() {
+      const container = document.getElementById('listaEstoque');
+      container.innerHTML = '';
+      estoquePerifericos.forEach((item, index) => {
+        container.innerHTML += `
+          <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
+            <span class="font-medium text-sm text-slate-700">${item.item}</span>
+            <div class="flex items-center gap-3">
+              <button onclick="alterarQtdEstoque(${index}, -1)" class="w-8 h-8 bg-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-300">-</button>
+              <span class="font-bold text-base w-6 text-center">${item.qtd}</span>
+              <button onclick="alterarQtdEstoque(${index}, 1)" class="w-8 h-8 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">+</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function alterarQtdEstoque(index, delta) {
+      if (estoquePerifericos[index].qtd + delta >= 0) {
+        estoquePerifericos[index].qtd += delta;
+        renderizarEstoque();
+      }
+    }
+
+    // Troca de Abas
+    function alternarAba(aba) {
+      if (aba === 'ativos') {
+        document.getElementById('abaAtivos').classList.remove('hidden');
+        document.getElementById('abaEstoque').classList.add('hidden');
+        document.getElementById('tabAtivosBtn').className = "flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600";
+        document.getElementById('tabEstoqueBtn').className = "flex-1 py-2 text-center font-bold text-slate-400 border-b-0";
+      } else {
+        document.getElementById('abaAtivos').classList.add('hidden');
+        document.getElementById('abaEstoque').classList.remove('hidden');
+        document.getElementById('tabEstoqueBtn').className = "flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600";
+        document.getElementById('tabAtivosBtn').className = "flex-1 py-2 text-center font-bold text-slate-400 border-b-0";
+      }
+    }
+
+    // Exportação do Excel
+    function exportarExcel() {
+      if (relatorioAtivos.length === 0 && estoquePerifericos.every(i => i.qtd === 0)) {
+        alert("Nenhum item foi registrado até o momento!");
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+
+      // Aba 1: Ativos
+      const wsAtivos = XLSX.utils.json_to_sheet(relatorioAtivos);
+      XLSX.utils.book_append_sheet(wb, wsAtivos, "Notebooks & Ativos");
+
+      // Aba 2: Estoque
+      const wsEstoque = XLSX.utils.json_to_sheet(estoquePerifericos);
+      XLSX.utils.book_append_sheet(wb, wsEstoque, "Contagem de Estoque");
+
+      // Baixar arquivo
+      const dataHoje = new Date().toISOString().slice(0,10);
+      XLSX.writeFile(wb, `Inventario_TI_${dataHoje}.xlsx`);
+    }
+
+    // Inicialização
+    renderizarEstoque();
+  </script>
+</body>
+</html>
