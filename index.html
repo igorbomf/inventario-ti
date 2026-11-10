@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inventário & Estoque Mobile</title>
-  <!-- Tailwind CSS para visual moderno e responsivo -->
+  <title>Inventário & Estoque TI</title>
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- SheetJS para leitura e geração de arquivos Excel -->
+  <!-- SheetJS para Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body class="bg-slate-100 text-slate-800 font-sans pb-24">
 
-  <!-- Cabeçalho -->
+  <!-- Header fixo -->
   <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
     <h1 class="font-bold text-lg">📱 Inventário TI</h1>
     <button onclick="exportarExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow flex items-center gap-1">
@@ -19,35 +19,33 @@
     </button>
   </header>
 
-  <main class="max-w-md mx-auto p-4 space-y-6">
+  <main class="max-w-md mx-auto p-4 space-y-5">
 
-    <!-- Seção 1: Importar Banco de Dados Atual -->
+    <!-- 1. Carregar Banco Base -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="font-bold text-sm text-slate-600 mb-2 uppercase tracking-wide">1. Banco de Dados Base</h2>
-      <label class="block text-xs text-slate-500 mb-1">Carregar planilha atual (.xlsx ou .csv):</label>
-      <input type="file" id="dbFileInput" accept=".xlsx, .xls, .csv" onchange="carregarBancoDados(event)" class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-      <p id="dbStatus" class="text-xs text-emerald-600 font-medium mt-2 hidden">✓ Banco de dados carregado com sucesso!</p>
+      <h2 class="font-bold text-xs text-slate-500 mb-2 uppercase tracking-wide">1. Carregar Banco de Dados Base</h2>
+      <input type="file" id="dbFileInput" accept=".xlsx, .xls, .csv" onchange="carregarBancoDados(event)" class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
+      <p id="dbStatus" class="text-xs text-emerald-600 font-medium mt-2 hidden">✓ Banco de dados base carregado!</p>
     </section>
 
     <!-- NAVEGAÇÃO ENTRE ABAS -->
     <div class="flex border-b border-slate-300">
       <button id="tabAtivosBtn" onclick="alternarAba('ativos')" class="flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600">Notebooks & Ativos</button>
-      <button id="tabEstoqueBtn" onclick="alternarAba('estoque')" class="flex-1 py-2 text-center font-bold text-slate-400 border-b-0">Periféricos & Estoque</button>
+      <button id="tabEstoqueBtn" onclick="alternarAba('estoque')" class="flex-1 py-2 text-center font-bold text-slate-400 border-b-0">Estoque Geral</button>
     </div>
 
     <!-- ABA 1: NOTEBOOKS E ATIVOS -->
     <div id="abaAtivos" class="space-y-4">
       <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
-        <h2 class="font-bold text-base text-slate-800 border-b pb-2">Buscar / Identificar Notebook</h2>
+        <h2 class="font-bold text-base text-slate-800 border-b pb-2">Identificar Equipamento</h2>
         
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-1">SN, Nº de Ativo ou Nome do PC</label>
-          <input type="text" id="campoBusca" oninput="buscarAtivo(this.value)" placeholder="Digite para buscar automaticamente..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
+          <label class="block text-xs font-semibold text-slate-600 mb-1">Buscar por SN / N.º Ativo / Hostname</label>
+          <input type="text" id="campoBusca" oninput="buscarAtivo(this.value)" placeholder="Digite para preencher automático..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
         </div>
 
         <hr class="my-2">
 
-        <!-- Formulário do Ativo -->
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-2">
             <div>
@@ -60,123 +58,184 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo</label>
-              <input type="text" id="fieldModelo" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do PC</label>
-              <input type="text" id="fieldNomePC" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
-            </div>
+          <!-- Seleção de Modelo com opção personalizada -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo</label>
+            <select id="fieldModeloSelect" onchange="verificarNovoModelo(this.value)" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm mb-1">
+              <option value="">Selecione um modelo...</option>
+              <option value="Latitude 7410">Latitude 7410</option>
+              <option value="Latitude 7420">Latitude 7420</option>
+              <option value="Latitude 7440">Latitude 7440</option>
+              <option value="Latitude 7450">Latitude 7450</option>
+              <option value="Pro 14 Plus">Pro 14 Plus</option>
+              <option value="Workstation">Workstation</option>
+              <option value="Modelo Anterior (7400/7490/Outros)">Modelo Anterior (7400/7490/Outros)</option>
+              <option value="__outro__">✏️ Outro modelo (Digitar)...</option>
+            </select>
+            <input type="text" id="fieldModeloManual" placeholder="Digite o novo modelo..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm hidden">
           </div>
 
-          <!-- TIPO DE CONFIGURAÇÃO (FLEXBOX / SELEÇÃO ÚNICA) -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Nome do PC / Hostname</label>
+            <input type="text" id="fieldNomePC" class="w-full p-2 bg-slate-100 border border-slate-300 rounded-lg text-sm">
+          </div>
+
+          <!-- Flexbox AECOM vs Formatado -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Classificação (Seleção Única)</label>
             <div class="grid grid-cols-2 gap-2">
-              <label id="btnAECOM" class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer font-bold text-slate-600 transition-all select-none">
+              <label id="btnAECOM" class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer font-bold text-slate-600 select-none">
                 <input type="radio" name="tipoStatus" value="AECOM" onchange="atualizarEstiloRadio()" class="hidden"> AECOM
               </label>
-              <label id="btnFormatado" class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer font-bold text-slate-600 transition-all select-none">
+              <label id="btnFormatado" class="flex items-center justify-center p-3 border-2 border-slate-200 rounded-xl cursor-pointer font-bold text-slate-600 select-none">
                 <input type="radio" name="tipoStatus" value="Formatado" onchange="atualizarEstiloRadio()" class="hidden"> Formatado
               </label>
             </div>
           </div>
 
+          <!-- Condição / Status -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Condição</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Status / Condição</label>
             <select id="fieldCondicao" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
-              <option value="Em Uso / Bom">Em Uso / Bom</option>
-              <option value="Excelente (Estoque)">Excelente (Estoque)</option>
-              <option value="Manutenção / Defeito">Manutenção / Defeito</option>
-              <option value="Descarte / Sucata">Descarte / Sucata</option>
+              <option value="OK / Operacional">OK / Operacional</option>
+              <option value="MS-SP">MS-SP</option>
+              <option value="Defeito / Manutenção">Defeito / Manutenção</option>
+              <option value="Defeito / Manutenção MS-SP">Defeito / Manutenção MS-SP</option>
             </select>
           </div>
 
-          <!-- Tags Rápidas de Defeito -->
+          <!-- Observações Rápidas -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Atalhos de Observação</label>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Observações Rápidas</label>
             <div class="flex flex-wrap gap-1.5 mb-2">
               <button type="button" onclick="addObsTag('Teclado ruim')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Teclado ruim</button>
-              <button type="button" onclick="addObsTag('Tela queimada/quebrada')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Tela danificada</button>
-              <button type="button" onclick="addObsTag('Bateria viciada')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Bateria viciada</button>
-              <button type="button" onclick="addObsTag('Sem carregador')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Sem carregador</button>
+              <button type="button" onclick="addObsTag('Tela quebrada/queimada')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Tela quebrada</button>
+              <button type="button" onclick="addObsTag('Bateria ruim')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Bateria ruim</button>
+              <button type="button" onclick="addObsTag('Apagado')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Apagado</button>
             </div>
-            <textarea id="fieldObs" rows="2" placeholder="Observações adicionais..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm"></textarea>
+            <textarea id="fieldObs" rows="2" placeholder="Outras observações..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm"></textarea>
           </div>
 
-          <button onclick="salvarAtivo()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg transition-colors">
+          <button onclick="salvarAtivo()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl shadow-lg">
             💾 Salvar Registros do Notebook
           </button>
         </div>
       </section>
     </div>
 
-    <!-- ABA 2: PERIFÉRICOS E ESTOQUE -->
+    <!-- ABA 2: ESTOQUE GERAL -->
     <div id="abaEstoque" class="space-y-4 hidden">
       <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-        <h2 class="font-bold text-base text-slate-800 border-b pb-2 mb-3">Contagem de Periféricos</h2>
-        <div id="listaEstoque" class="space-y-3">
-          <!-- Itens injetados via JavaScript -->
+        <div class="flex justify-between items-center border-b pb-2 mb-3">
+          <h2 class="font-bold text-base text-slate-800">Contagem de Estoque</h2>
+          <button onclick="adicionarItemPersonalizado()" class="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-lg border border-blue-200">+ Novo Item</button>
+        </div>
+        <div id="listaEstoque" class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+          <!-- Itens injetados via Script -->
         </div>
       </section>
     </div>
 
   </main>
 
-  <!-- LÓGICA EM JAVASCRIPT -->
   <script>
     let bancoDados = [];
     let relatorioAtivos = [];
-    let estoquePerifericos = [
-      { item: "Mouse USB / Sem Fio", qtd: 0 },
-      { item: "Teclado USB", qtd: 0 },
-      { item: "Cabo HDMI", qtd: 0 },
-      { item: "Carregador / Fonte Notebook", qtd: 0 },
-      { item: "Adaptador DisplayPort / HDMI", qtd: 0 },
-      { item: "Headset / Fone de Ouvido", qtd: 0 }
-    ];
 
-    // Carregar Planilha Base (.xlsx/.csv)
+    // Lista Completa do seu Estoque Atual
+    let estoqueItens = [
+      "Adaptador RJ45", "Ajuste Altura Monitor", "Almofada de Fone (Headset) - UN", 
+      "Apoio de punho P/ teclado", "Cabo HDMI", "Cartão de Memória MicroSD 128GB", 
+      "Cartucho HP 954XL Cleide - Amarelo", "Cartucho HP 954XL Cleide - Ciano", 
+      "Cartucho HP 954XL Cleide - Preto", "Cartucho HP 964XL MP - Amarelo", 
+      "Cartucho HP 964XL MP - Ciano", "Cartucho HP 964XL MP - Magenta", 
+      "Cartucho HP 964XL MP - Preto", "Cartucho T067 Canon ES - Amarelo", 
+      "Cartucho T067 Canon ES - Ciano", "Cartucho T067 Canon ES - Magenta", 
+      "Cartucho T067 Canon ES - Preto", "Celular - Modelos Anteriores", 
+      "Celular - Modelos Anteriores - Defeito/Manutenção", "Celular Motorola G10", 
+      "Celular Motorola G10 - Defeito/Manutenção", "Celular Motorola G22", 
+      "Celular Motorola G22 - Defeito/Manutenção", "Celular Motorola G7", 
+      "Celular Motorola G7 - Defeito/Manutenção", "Celular Motorola G8", 
+      "Celular Motorola G8 - Defeito/Manutenção", "Celular Motorola G9", 
+      "Celular Motorola G9 - Defeito/Manutenção", "Celular Samsung A36", 
+      "Celular Samsung A36 - Defeito/Manutenção", "Crachá Provisorio", 
+      "Dockstation - Defeito/Manutenção", "Dockstation Pro Smart (Workstation)", 
+      "Dockstation TB16 (Workstation)", "Dockstation TB16 (Workstation) - Defeito/Manuntenção", 
+      "Dockstation WD15", "Dockstation WD15 - Defeito/Manutenção", "Dockstation WD19", 
+      "Dockstation WD19 - Defeito/Manutenção", "Dockstation WD25 (Padrão)", 
+      "Dockstation WD25 (Padrão) - Defeito/Manutenção", "Fita Brady", 
+      "Fone de Ouvido Head Set USB", "Mochila", "Mochila - Defeito/Manutenção", 
+      "Monitor Dell P2417H", "Monitor Dell P2417H - Defeito/Manutenção", 
+      "Monitor LG 24MK430H", "Monitor LG 24MK430H - Defeito/Manutenção", 
+      "Monitor Modelos Anteriores", "Monitor Modelos Anteriores - Defeito/Manutenção", 
+      "Monitor Samsung Essential S4", "Monitor Samsung Essential S4 - Defeito/Manutenção", 
+      "Mouse", "Mousepad", "Notebook Latitude 7410", "Notebook Latitude 7410 - Defeito/Manutenção", 
+      "Notebook Latitude 7410 - Defeito/Manutenção MS-SP", "Notebook Latitude 7410 - MS-SP", 
+      "Notebook Latitude 7420", "Notebook Latitude 7420 - Defeito/Manutenção", 
+      "Notebook Latitude 7420 - Defeito/Manutenção MS-SP", "Notebook Latitude 7420 - MS-SP", 
+      "Notebook Latitude 7440", "Notebook Latitude 7440 - Defeito/Manutenção", 
+      "Notebook Latitude 7450", "Notebook Latitude 7450 - Defeito/Manutenção", 
+      "Notebook Latitude 7450 - Defeito/Manutenção MS-SP", "Notebook Latitude 7450 - MS-SP", 
+      "Notebook Mod. Anteriores (7400/7490/Outros)", "Notebook Mod. Anteriores (7400/7490/Outros) - Defeito/Manutenção", 
+      "Notebook Pro 14 Plus", "Notebook Pro 14 Plus - Defeito/Manutenção", 
+      "Notebook workstation", "Notebook workstation - Defeito/Manutenção", 
+      "Patch cord", "Pen drive 16GB data travel", "Pen drive 16GB fit", 
+      "Pen drive 32GB fit", "Pen drive 64GB data travel", "Pen drive 128GB", 
+      "Suporte para notebook", "Tablet - Defeito/Manutenção", "Tablet S10+", 
+      "Tablet S5+", "Tablet S6+", "Teclado"
+    ].map(nome => ({ item: nome, qtd: 0 }));
+
     function carregarBancoDados(event) {
       const file = event.target.files[0];
       if (!file) return;
-
       const reader = new FileReader();
       reader.onload = function(e) {
         const data = new Uint8Array(e.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        bancoDados = XLSX.utils.sheet_to_json(worksheet);
+        bancoDados = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
         document.getElementById('dbStatus').classList.remove('hidden');
       };
       reader.readAsArrayBuffer(file);
     }
 
-    // Autocompletar Busca
     function buscarAtivo(termo) {
       if (!termo || termo.trim() === '') return;
       const t = termo.toLowerCase().trim();
-
-      const itemEncontrado = bancoDados.find(row => {
+      const item = bancoDados.find(row => {
         const ativo = String(row['Ativo'] || row['N_Ativo'] || row['Nº de Ativo'] || '').toLowerCase();
         const sn = String(row['SN'] || row['Serial'] || row['N_Serie'] || '').toLowerCase();
         const nome = String(row['Nome'] || row['Nome_PC'] || row['Host'] || '').toLowerCase();
         return ativo.includes(t) || sn.includes(t) || nome.includes(t);
       });
 
-      if (itemEncontrado) {
-        document.getElementById('fieldAtivo').value = itemEncontrado['Ativo'] || itemEncontrado['N_Ativo'] || itemEncontrado['Nº de Ativo'] || '';
-        document.getElementById('fieldSN').value = itemEncontrado['SN'] || itemEncontrado['Serial'] || itemEncontrado['N_Serie'] || '';
-        document.getElementById('fieldModelo').value = itemEncontrado['Modelo'] || itemEncontrado['Model'] || '';
-        document.getElementById('fieldNomePC').value = itemEncontrado['Nome'] || itemEncontrado['Nome_PC'] || itemEncontrado['Host'] || '';
-        document.getElementById('fieldObs').value = itemEncontrado['Observacao'] || itemEncontrado['Obs'] || '';
+      if (item) {
+        document.getElementById('fieldAtivo').value = item['Ativo'] || item['N_Ativo'] || item['Nº de Ativo'] || '';
+        document.getElementById('fieldSN').value = item['SN'] || item['Serial'] || item['N_Serie'] || '';
+        document.getElementById('fieldNomePC').value = item['Nome'] || item['Nome_PC'] || item['Host'] || '';
+        document.getElementById('fieldObs').value = item['Observacao'] || item['Obs'] || '';
+        
+        const mod = item['Modelo'] || item['Model'] || '';
+        const select = document.getElementById('fieldModeloSelect');
+        if (Array.from(select.options).some(o => o.value === mod)) {
+          select.value = mod;
+          verificarNovoModelo(mod);
+        } else if (mod !== '') {
+          select.value = '__outro__';
+          verificarNovoModelo('__outro__');
+          document.getElementById('fieldModeloManual').value = mod;
+        }
       }
     }
 
-    // Estilo Flexbox / Radio Buttons (AECOM vs Formatado)
+    function verificarNovoModelo(val) {
+      const manualInput = document.getElementById('fieldModeloManual');
+      if (val === '__outro__') {
+        manualInput.classList.remove('hidden');
+      } else {
+        manualInput.classList.add('hidden');
+      }
+    }
+
     function atualizarEstiloRadio() {
       const radios = document.getElementsByName('tipoStatus');
       radios.forEach(radio => {
@@ -192,58 +251,59 @@
     }
 
     function addObsTag(tag) {
-      const obsInput = document.getElementById('fieldObs');
-      if (obsInput.value.length > 0) {
-        obsInput.value += ', ' + tag;
-      } else {
-        obsInput.value = tag;
-      }
+      const obs = document.getElementById('fieldObs');
+      obs.value = obs.value ? `${obs.value}, ${tag}` : tag;
     }
 
-    // Salvar Registro na Lista
     function salvarAtivo() {
       const radios = document.getElementsByName('tipoStatus');
       let statusSelecionado = '';
       radios.forEach(r => { if(r.checked) statusSelecionado = r.value; });
 
+      let modeloFinal = document.getElementById('fieldModeloSelect').value;
+      if (modeloFinal === '__outro__') {
+        modeloFinal = document.getElementById('fieldModeloManual').value;
+      }
+
       const registro = {
         "Nº Ativo": document.getElementById('fieldAtivo').value,
         "Serial Number (SN)": document.getElementById('fieldSN').value,
-        "Modelo": document.getElementById('fieldModelo').value,
+        "Modelo": modeloFinal,
         "Nome do Computador": document.getElementById('fieldNomePC').value,
         "Classificação": statusSelecionado,
-        "Condição": document.getElementById('fieldCondicao').value,
+        "Condição / Status": document.getElementById('fieldCondicao').value,
         "Observações": document.getElementById('fieldObs').value,
-        "Data/Hora Registro": new Date().toLocaleString('pt-BR')
+        "Data/Hora": new Date().toLocaleString('pt-BR')
       };
 
       relatorioAtivos.push(registro);
 
-      // Limpar formulário para o próximo
+      // Limpar formulário
       document.getElementById('campoBusca').value = '';
       document.getElementById('fieldAtivo').value = '';
       document.getElementById('fieldSN').value = '';
-      document.getElementById('fieldModelo').value = '';
+      document.getElementById('fieldModeloSelect').value = '';
+      document.getElementById('fieldModeloManual').value = '';
+      document.getElementById('fieldModeloManual').classList.add('hidden');
       document.getElementById('fieldNomePC').value = '';
       document.getElementById('fieldObs').value = '';
       radios.forEach(r => r.checked = false);
       atualizarEstiloRadio();
 
-      alert("✓ Ativo salvo na lista!");
+      alert("✓ Ativo salvo!");
     }
 
-    // Renderizar Lista de Estoque
     function renderizarEstoque() {
       const container = document.getElementById('listaEstoque');
       container.innerHTML = '';
-      estoquePerifericos.forEach((item, index) => {
+      estoqueItens.forEach((item, index) => {
         container.innerHTML += `
-          <div class="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg">
-            <span class="font-medium text-sm text-slate-700">${item.item}</span>
-            <div class="flex items-center gap-3">
-              <button onclick="alterarQtdEstoque(${index}, -1)" class="w-8 h-8 bg-slate-200 text-slate-700 font-bold rounded-lg hover:bg-slate-300">-</button>
-              <span class="font-bold text-base w-6 text-center">${item.qtd}</span>
-              <button onclick="alterarQtdEstoque(${index}, 1)" class="w-8 h-8 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700">+</button>
+          <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+            <span class="font-medium text-xs text-slate-700 pr-2">${item.item}</span>
+            <div class="flex items-center gap-2 shrink-0">
+              <button onclick="alterarQtdEstoque(${index}, -1)" class="w-7 h-7 bg-slate-200 text-slate-700 font-bold rounded hover:bg-slate-300">-</button>
+              <span class="font-bold text-sm w-6 text-center">${item.qtd}</span>
+              <button onclick="alterarQtdEstoque(${index}, 1)" class="w-7 h-7 bg-blue-600 text-white font-bold rounded hover:bg-blue-700">+</button>
             </div>
           </div>
         `;
@@ -251,13 +311,20 @@
     }
 
     function alterarQtdEstoque(index, delta) {
-      if (estoquePerifericos[index].qtd + delta >= 0) {
-        estoquePerifericos[index].qtd += delta;
+      if (estoqueItens[index].qtd + delta >= 0) {
+        estoqueItens[index].qtd += delta;
         renderizarEstoque();
       }
     }
 
-    // Troca de Abas
+    function adicionarItemPersonalizado() {
+      const nomeItem = prompt("Digite o nome do novo item:");
+      if (nomeItem && nomeItem.trim() !== "") {
+        estoqueItens.unshift({ item: nomeItem.trim(), qtd: 1 });
+        renderizarEstoque();
+      }
+    }
+
     function alternarAba(aba) {
       if (aba === 'ativos') {
         document.getElementById('abaAtivos').classList.remove('hidden');
@@ -272,29 +339,29 @@
       }
     }
 
-    // Exportação do Excel
     function exportarExcel() {
-      if (relatorioAtivos.length === 0 && estoquePerifericos.every(i => i.qtd === 0)) {
-        alert("Nenhum item foi registrado até o momento!");
+      if (relatorioAtivos.length === 0 && estoqueItens.every(i => i.qtd === 0)) {
+        alert("Nenhum registro para exportar!");
         return;
       }
 
       const wb = XLSX.utils.book_new();
 
-      // Aba 1: Ativos
-      const wsAtivos = XLSX.utils.json_to_sheet(relatorioAtivos);
-      XLSX.utils.book_append_sheet(wb, wsAtivos, "Notebooks & Ativos");
+      if (relatorioAtivos.length > 0) {
+        const wsAtivos = XLSX.utils.json_to_sheet(relatorioAtivos);
+        XLSX.utils.book_append_sheet(wb, wsAtivos, "Notebooks & Ativos");
+      }
 
-      // Aba 2: Estoque
-      const wsEstoque = XLSX.utils.json_to_sheet(estoquePerifericos);
-      XLSX.utils.book_append_sheet(wb, wsEstoque, "Contagem de Estoque");
+      const itensComEstoque = estoqueItens.filter(i => i.qtd > 0);
+      if (itensComEstoque.length > 0) {
+        const wsEstoque = XLSX.utils.json_to_sheet(itensComEstoque);
+        XLSX.utils.book_append_sheet(wb, wsEstoque, "Contagem de Estoque");
+      }
 
-      // Baixar arquivo
       const dataHoje = new Date().toISOString().slice(0,10);
       XLSX.writeFile(wb, `Inventario_TI_${dataHoje}.xlsx`);
     }
 
-    // Inicialização
     renderizarEstoque();
   </script>
 </body>
