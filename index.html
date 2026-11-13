@@ -12,9 +12,14 @@
   <!-- Header fixo -->
   <header class="bg-blue-600 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center">
     <h1 class="font-bold text-lg">📱 Inventário TI</h1>
-    <button onclick="exportarExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow flex items-center gap-1">
-      📊 Exportar Excel
-    </button>
+    <div class="flex gap-2">
+      <button onclick="limparSessaoCompleta()" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow">
+        🗑️ Limpar Testes
+      </button>
+      <button onclick="exportarExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow flex items-center gap-1">
+        📊 Exportar
+      </button>
+    </div>
   </header>
 
   <main class="max-w-md mx-auto p-4 space-y-5">
@@ -25,14 +30,15 @@
       <input type="file" id="dbFileInput" accept=".xlsx, .xls" onchange="carregarBancoDados(event)" class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
       <div class="flex justify-between items-center mt-2">
         <p id="dbStatus" class="text-xs text-emerald-600 font-medium hidden"></p>
-        <button onclick="limparBancoSalvo()" id="btnLimparBase" class="text-[10px] text-red-500 hover:underline hidden">🗑️ Atualizar Planilha Base</button>
+        <button onclick="limparBancoSalvo()" id="btnLimparBase" class="text-[10px] text-red-500 hover:underline hidden">Atualizar Planilha Base</button>
       </div>
     </section>
 
     <!-- NAVEGAÇÃO ENTRE ABAS PRINCIPAIS -->
-    <div class="flex border-b border-slate-300">
-      <button id="tabAtivosBtn" onclick="alternarAbaPrincipal('ativos')" class="flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600">Ativos & Equipamentos</button>
-      <button id="tabEstoqueBtn" onclick="alternarAbaPrincipal('estoque')" class="flex-1 py-2 text-center font-bold text-slate-400 border-b-0">Estoque Geral</button>
+    <div class="flex border-b border-slate-300 bg-white rounded-t-xl overflow-hidden shadow-sm">
+      <button id="tabAtivosBtn" onclick="alternarAbaPrincipal('ativos')" class="flex-1 py-2.5 text-center font-bold text-xs text-blue-600 border-b-2 border-blue-600">Novo Ativo</button>
+      <button id="tabConsultaBtn" onclick="alternarAbaPrincipal('consulta')" class="flex-1 py-2.5 text-center font-bold text-xs text-slate-400 border-b-0">🔍 Consultar</button>
+      <button id="tabEstoqueBtn" onclick="alternarAbaPrincipal('estoque')" class="flex-1 py-2.5 text-center font-bold text-xs text-slate-400 border-b-0">Estoque Geral</button>
     </div>
 
     <!-- ABA 1: ATIVOS E EQUIPAMENTOS -->
@@ -41,7 +47,7 @@
         
         <!-- Busca Global em Todas as Abas -->
         <div class="relative">
-          <label class="block text-xs font-semibold text-slate-600 mb-1">🔍 Buscar em todas as abas (SN / Ativo / Nome / IMEI)</label>
+          <label class="block text-xs font-semibold text-slate-600 mb-1">🔍 Buscar na Base (SN / Ativo / Nome / IMEI)</label>
           <input type="text" id="campoBusca" oninput="buscarAtivoDinamico(this.value)" placeholder="Digite para buscar automaticamente..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono text-sm">
           <div id="listaSugestoes" class="absolute left-0 right-0 bg-white border border-slate-300 rounded-lg shadow-lg mt-1 max-h-56 overflow-y-auto z-50 hidden"></div>
         </div>
@@ -59,7 +65,7 @@
           </select>
         </div>
 
-        <!-- Campos Comuns a Todos -->
+        <!-- Campos Comuns -->
         <div class="space-y-3 pt-1">
           <div class="grid grid-cols-2 gap-2">
             <div>
@@ -165,7 +171,32 @@
       </section>
     </div>
 
-    <!-- ABA 2: ESTOQUE GERAL -->
+    <!-- ABA 2: CONSULTAR REGISTROS -->
+    <div id="abaConsulta" class="space-y-4 hidden">
+      <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+        <h2 class="font-bold text-base text-slate-800 border-b pb-2">📋 Itens Já Cadastrados</h2>
+        
+        <!-- Filtro da Consulta -->
+        <div>
+          <input type="text" id="filtroConsulta" oninput="renderizarTabelaConsulta()" placeholder="Filtrar por Ativo, SN, Nome..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono">
+        </div>
+
+        <!-- Seletor da Aba para Visualizar -->
+        <div class="flex gap-1 overflow-x-auto pb-1">
+          <button onclick="mudarAbaConsulta('Computadores')" id="btnCatComp" class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg whitespace-nowrap">Computadores</button>
+          <button onclick="mudarAbaConsulta('Monitores')" id="btnCatMon" class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap">Monitores</button>
+          <button onclick="mudarAbaConsulta('Tablet e Celular')" id="btnCatCel" class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap">Tablet/Celular</button>
+          <button onclick="mudarAbaConsulta('Geral')" id="btnCatGer" class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap">Geral</button>
+        </div>
+
+        <!-- Lista de Resultados da Consulta -->
+        <div id="listaConsulta" class="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
+          <!-- Injetado via script -->
+        </div>
+      </section>
+    </div>
+
+    <!-- ABA 3: ESTOQUE GERAL -->
     <div id="abaEstoque" class="space-y-4 hidden">
       <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
         <div class="flex justify-between items-center border-b pb-2">
@@ -186,23 +217,24 @@
   <script>
     let bancoDadosUnificado = [];
     let registrosPorAba = { "Computadores": [], "Monitores": [], "Tablet e Celular": [], "Geral": [] };
+    let abaConsultaAtual = "Computadores";
 
     let estoqueItens = [
       "Adaptador RJ45", "Ajuste Altura Monitor", "Almofada de Fone (Headset) - UN", "Apoio de punho P/ teclado", "Cabo HDMI", "Cartão de Memória MicroSD 128GB", "Cartucho HP 954XL Cleide - Amarelo", "Cartucho HP 954XL Cleide - Ciano", "Cartucho HP 954XL Cleide - Preto", "Cartucho HP 964XL MP - Amarelo", "Cartucho HP 964XL MP - Ciano", "Cartucho HP 964XL MP - Magenta", "Cartucho HP 964XL MP - Preto", "Cartucho T067 Canon ES - Amarelo", "Cartucho T067 Canon ES - Ciano", "Cartucho T067 Canon ES - Magenta", "Cartucho T067 Canon ES - Preto", "Celular - Modelos Anteriores", "Celular - Modelos Anteriores - Defeito/Manutenção", "Celular Motorola G10", "Celular Motorola G10 - Defeito/Manutenção", "Celular Motorola G22", "Celular Motorola G22 - Defeito/Manutenção", "Celular Motorola G7", "Celular Motorola G7 - Defeito/Manutenção", "Celular Motorola G8", "Celular Motorola G8 - Defeito/Manutenção", "Celular Motorola G9", "Celular Motorola G9 - Defeito/Manutenção", "Celular Samsung A36", "Celular Samsung A36 - Defeito/Manutenção", "Crachá Provisorio", "Dockstation - Defeito/Manutenção", "Dockstation Pro Smart (Workstation)", "Dockstation TB16 (Workstation)", "Dockstation TB16 (Workstation) - Defeito/Manuntenção", "Dockstation WD15", "Dockstation WD15 - Defeito/Manutenção", "Dockstation WD19", "Dockstation WD19 - Defeito/Manutenção", "Dockstation WD25 (Padrão)", "Dockstation WD25 (Padrão) - Defeito/Manutenção", "Fita Brady", "Fone de Ouvido Head Set USB", "Mochila", "Mochila - Defeito/Manutenção", "Monitor Dell P2417H", "Monitor Dell P2417H - Defeito/Manutenção", "Monitor LG 24MK430H", "Monitor LG 24MK430H - Defeito/Manutenção", "Monitor Modelos Anteriores", "Monitor Modelos Anteriores - Defeito/Manutenção", "Monitor Samsung Essential S4", "Monitor Samsung Essential S4 - Defeito/Manutenção", "Mouse", "Mousepad", "Notebook Latitude 7410", "Notebook Latitude 7410 - Defeito/Manutenção", "Notebook Latitude 7410 - Defeito/Manutenção MS-SP", "Notebook Latitude 7410 - MS-SP", "Notebook Latitude 7420", "Notebook Latitude 7420 - Defeito/Manutenção", "Notebook Latitude 7420 - Defeito/Manutenção MS-SP", "Notebook Latitude 7420 - MS-SP", "Notebook Latitude 7440", "Notebook Latitude 7440 - Defeito/Manutenção", "Notebook Latitude 7450", "Notebook Latitude 7450 - Defeito/Manutenção", "Notebook Latitude 7450 - Defeito/Manutenção MS-SP", "Notebook Latitude 7450 - MS-SP", "Notebook Mod. Anteriores (7400/7490/Outros)", "Notebook Mod. Anteriores (7400/7490/Outros) - Defeito/Manutenção", "Notebook Pro 14 Plus", "Notebook Pro 14 Plus - Defeito/Manutenção", "Notebook workstation", "Notebook workstation - Defeito/Manutenção", "Patch cord", "Pen drive 16GB data travel", "Pen drive 16GB fit", "Pen drive 32GB fit", "Pen drive 64GB data travel", "Pen drive 128GB", "Suporte para notebook", "Tablet - Defeito/Manutenção", "Tablet S10+", "Tablet S5+", "Tablet S6+", "Teclado"
     ].map(nome => ({ item: nome, digitando: 0, salvo: 0 }));
 
-    // Ao carregar a página, verifica se já existe banco salvo no navegador
     window.onload = function() {
       const salvo = localStorage.getItem('inventario_banco_base');
       if (salvo) {
         bancoDadosUnificado = JSON.parse(salvo);
         const statusEl = document.getElementById('dbStatus');
-        statusEl.textContent = `✓ Base ativa (${bancoDadosUnificado.length} itens salvos no aparelho)`;
+        statusEl.textContent = `✓ Base ativa (${bancoDadosUnificado.length} itens salvos)`;
         statusEl.classList.remove('hidden');
         document.getElementById('btnLimparBase').classList.remove('hidden');
       }
       mudarCategoriaFormulario();
       renderizarEstoque();
+      renderizarTabelaConsulta();
     };
 
     function pegarValorColuna(obj, possiveisChaves) {
@@ -233,17 +265,11 @@
           else if (sLower.includes("tablet") || sLower.includes("celular") || sLower.includes("mobile")) categoriaDetectada = "Tablet e Celular";
 
           rows.forEach(r => {
-            bancoDadosUnificado.push({
-              _abaOrigem: categoriaDetectada,
-              _nomeAbaOriginal: sheetName,
-              raw: r
-            });
+            bancoDadosUnificado.push({ _abaOrigem: categoriaDetectada, _nomeAbaOriginal: sheetName, raw: r });
           });
         });
 
-        // Salva na memória do navegador para não precisar enviar toda vez
         localStorage.setItem('inventario_banco_base', JSON.stringify(bancoDadosUnificado));
-
         const statusEl = document.getElementById('dbStatus');
         statusEl.textContent = `✓ ${bancoDadosUnificado.length} itens salvos no aparelho!`;
         statusEl.classList.remove('hidden');
@@ -253,12 +279,22 @@
     }
 
     function limparBancoSalvo() {
-      if (confirm("Deseja remover a base de dados atual para carregar uma nova planilha?")) {
+      if (confirm("Deseja remover a base de dados atual?")) {
         localStorage.removeItem('inventario_banco_base');
         bancoDadosUnificado = [];
         document.getElementById('dbStatus').classList.add('hidden');
         document.getElementById('btnLimparBase').classList.add('hidden');
-        alert("Base removida. Carregue a nova planilha.");
+        alert("Base removida.");
+      }
+    }
+
+    function limparSessaoCompleta() {
+      if (confirm("⚠️ Deseja apagar todos os registros salvos nesta sessão de testes?")) {
+        registrosPorAba = { "Computadores": [], "Monitores": [], "Tablet e Celular": [], "Geral": [] };
+        estoqueItens.forEach(i => { i.salvo = 0; i.digitando = 0; });
+        renderizarEstoque();
+        renderizarTabelaConsulta();
+        alert("Sessão limpa com sucesso!");
       }
     }
 
@@ -276,9 +312,7 @@
         const ativo = String(pegarValorColuna(r, ['ativo', 'n_ativo', 'numero de ativo', 'nº de ativo'])).toLowerCase();
         const sn = String(pegarValorColuna(r, ['sn', 'serial', 'serial number', 'n_serie'])).toLowerCase();
         const nome = String(pegarValorColuna(r, ['nome', 'nome do computador', 'hostname', 'host'])).toLowerCase();
-        const imei1 = String(pegarValorColuna(r, ['imei1', 'imei 1', 'imei'])).toLowerCase();
-        const imei2 = String(pegarValorColuna(r, ['imei2', 'imei 2'])).toLowerCase();
-        return ativo.includes(t) || sn.includes(t) || nome.includes(t) || imei1.includes(t) || imei2.includes(t);
+        return ativo.includes(t) || sn.includes(t) || nome.includes(t);
       });
 
       if (resultados.length > 0) {
@@ -291,10 +325,7 @@
           
           const div = document.createElement('div');
           div.className = "p-2.5 hover:bg-blue-50 border-b border-slate-100 cursor-pointer text-xs";
-          div.innerHTML = `
-            <span class="inline-block px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[10px] mb-1">${entry._abaOrigem}</span><br>
-            <strong>Ativo:</strong> ${ativoVal} | <strong>SN:</strong> ${snVal} | <strong>Nome:</strong> ${nomeVal}
-          `;
+          div.innerHTML = `<span class="inline-block px-1 py-0.5 bg-blue-100 text-blue-800 rounded font-bold text-[9px]">${entry._abaOrigem}</span><br><strong>Ativo:</strong> ${ativoVal} | <strong>SN:</strong> ${snVal} | <strong>Nome:</strong> ${nomeVal}`;
           div.onclick = () => preencherCamposAtivo(entry);
           container.appendChild(div);
         });
@@ -305,8 +336,7 @@
     }
 
     function preencherCamposAtivo(entry) {
-      const selectCat = document.getElementById('categoriaAtivo');
-      selectCat.value = entry._abaOrigem;
+      document.getElementById('categoriaAtivo').value = entry._abaOrigem;
       mudarCategoriaFormulario();
 
       const r = entry.raw;
@@ -336,18 +366,10 @@
       boxTipo.classList.add('hidden');
       datalistTipos.innerHTML = '';
 
-      if (cat === "Computadores") {
-        boxComp.classList.remove('hidden');
-      } else if (cat === "Monitores") {
-        boxTipo.classList.remove('hidden');
-        datalistTipos.innerHTML = `<option value="Monitor"><option value="TV">`;
-      } else if (cat === "Tablet e Celular") {
-        boxTipo.classList.remove('hidden');
-        boxMobile.classList.remove('hidden');
-        datalistTipos.innerHTML = `<option value="Cel - Comodato"><option value="Cel p/ Drone"><option value="Tablet">`;
-      } else if (cat === "Geral") {
-        boxTipo.classList.remove('hidden');
-      }
+      if (cat === "Computadores") boxComp.classList.remove('hidden');
+      else if (cat === "Monitores") { boxTipo.classList.remove('hidden'); datalistTipos.innerHTML = `<option value="Monitor"><option value="TV">`; }
+      else if (cat === "Tablet e Celular") { boxTipo.classList.remove('hidden'); boxMobile.classList.remove('hidden'); datalistTipos.innerHTML = `<option value="Cel - Comodato"><option value="Cel p/ Drone"><option value="Tablet">`; }
+      else if (cat === "Geral") boxTipo.classList.remove('hidden');
     }
 
     function atualizarEstiloRadio() {
@@ -382,46 +404,22 @@
       const dataHora = new Date().toLocaleString('pt-BR');
 
       if (!ativo && !sn) {
-        alert("Preencha ao menos o Nº de Ativo ou o SN para salvar.");
+        alert("Preencha ao menos o Nº de Ativo ou o SN.");
         return;
       }
 
-      // --- VERIFICAÇÃO INTELIGENTE DE DUPLICADAS ---
       let duplicado = false;
       let msgDuplicidade = "";
-
-      // 1. Checa se já foi salvo na lista atual da sessão
       for (let abaKey in registrosPorAba) {
-        const achouSessao = registrosPorAba[abaKey].find(item => 
-          (ativo && item["Ativo"] === ativo) || (sn && item["SN"] === sn)
-        );
-        if (achouSessao) {
+        const achou = registrosPorAba[abaKey].find(item => (ativo && item["Ativo"] === ativo) || (sn && item["SN"] === sn));
+        if (achou) {
           duplicado = true;
-          msgDuplicidade = `⚠️ Este item (Ativo: ${ativo || 'N/A'} / SN: ${sn || 'N/A'}) já foi salvo na aba "${abaKey}" nesta sessão de trabalho!`;
+          msgDuplicidade = `⚠️ Já foi salvo na aba "${abaKey}" nesta sessão!`;
           break;
         }
       }
 
-      // 2. Se não achou na sessão, checa se já existe na base de dados carregada
-      if (!duplicado && bancoDadosUnificado.length > 0) {
-        const achouBase = bancoDadosUnificado.find(entry => {
-          const r = entry.raw;
-          const bAtivo = String(pegarValorColuna(r, ['ativo', 'n_ativo', 'numero de ativo', 'nº de ativo'])).trim();
-          const bSn = String(pegarValorColuna(r, ['sn', 'serial', 'serial number', 'n_serie'])).trim();
-          return (ativo && bAtivo === ativo) || (sn && bSn === sn);
-        });
-        if (achouBase) {
-          duplicado = true;
-          msgDuplicidade = `⚠️ Atenção: Este Ativo/SN já consta na sua planilha base original (Aba: ${achouBase._abaOrigem})!`;
-        }
-      }
-
-      if (duplicado) {
-        if (!confirm(msgDuplicidade + "\n\nDeseja registrar mesmo assim?")) {
-          return; // Cancela se o usuário recusar
-        }
-      }
-      // ----------------------------------------------
+      if (duplicado && !confirm(msgDuplicidade + "\n\nDeseja registrar mesmo assim?")) return;
 
       let registro = {};
       if (cat === "Computadores") {
@@ -451,8 +449,65 @@
       document.getElementById('fieldObs').value = '';
       document.getElementsByName('tipoFormatacao').forEach(r => r.checked = false);
       atualizarEstiloRadio();
+      renderizarTabelaConsulta();
 
-      alert(`✓ Salvo na aba "${cat}" com sucesso!`);
+      alert(`✓ Salvo na aba "${cat}"!`);
+    }
+
+    // Gerenciamento da Consulta de Registros
+    function mudarAbaConsulta(cat) {
+      abaConsultaAtual = cat;
+      ['Computadores', 'Monitores', 'Tablet e Celular', 'Geral'].forEach(c => {
+        const btnId = 'btnCat' + (c === 'Computadores' ? 'Comp' : c === 'Monitores' ? 'Mon' : c === 'Tablet e Celular' ? 'Cel' : 'Ger');
+        const btn = document.getElementById(btnId);
+        if (c === cat) {
+          btn.className = "px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg whitespace-nowrap";
+        } else {
+          btn.className = "px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap";
+        }
+      });
+      renderizarTabelaConsulta();
+    }
+
+    function renderizarTabelaConsulta() {
+      const container = document.getElementById('listaConsulta');
+      const filtro = document.getElementById('filtroConsulta').value.toLowerCase().trim();
+      container.innerHTML = '';
+
+      const lista = registrosPorAba[abaConsultaAtual];
+      const filtrados = lista.filter(item => {
+        const ativo = String(item['Ativo'] || '').toLowerCase();
+        const sn = String(item['SN'] || '').toLowerCase();
+        const nome = String(item['Nome'] || '').toLowerCase();
+        return ativo.includes(filtro) || sn.includes(filtro) || nome.includes(filtro);
+      });
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum registro encontrado nesta categoria.</p>`;
+        return;
+      }
+
+      filtrados.forEach((item, idx) => {
+        container.innerHTML += `
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1 relative">
+            <div class="flex justify-between font-bold text-slate-700">
+              <span>Ativo: ${item['Ativo'] || 'S/Nº'} | SN: ${item['SN'] || 'S/SN'}</span>
+              <button onclick="removerItemConsulta('${abaConsultaAtual}', ${idx})" class="text-red-500 font-bold px-1">✕</button>
+            </div>
+            <div><strong>Nome:</strong> ${item['Nome'] || '-'} | <strong>Modelo:</strong> ${item['Modelo'] || '-'}</div>
+            <div><strong>Status:</strong> ${item['Status'] || '-'} | <strong>Condição:</strong> ${item['Condição'] || '-'}</div>
+            ${item['Formatação'] ? `<div><strong>Formatação:</strong> ${item['Formatação']}</div>` : ''}
+            ${item['Observações'] ? `<div class="text-slate-500 italic">Obs: ${item['Observações']}</div>` : ''}
+          </div>
+        `;
+      });
+    }
+
+    function removerItemConsulta(cat, index) {
+      if (confirm("Deseja remover este registro da lista?")) {
+        registrosPorAba[cat].splice(index, 1);
+        renderizarTabelaConsulta();
+      }
     }
 
     function renderizarEstoque() {
@@ -491,13 +546,8 @@
           alterado = true;
         }
       });
-
-      if (alterado) {
-        renderizarEstoque();
-        alert("✓ Contagem salva e acumulada com sucesso!");
-      } else {
-        alert("Adicione quantidade em algum item antes de salvar.");
-      }
+      if (alterado) { renderizarEstoque(); alert("✓ Contagem acumulada com sucesso!"); }
+      else alert("Adicione quantidade antes de salvar.");
     }
 
     function adicionarItemPersonalizado() {
@@ -509,25 +559,28 @@
     }
 
     function alternarAbaPrincipal(aba) {
+      document.getElementById('abaAtivos').classList.add('hidden');
+      document.getElementById('abaConsulta').classList.add('hidden');
+      document.getElementById('abaEstoque').classList.add('hidden');
+      document.getElementById('tabAtivosBtn').className = "flex-1 py-2.5 text-center font-bold text-xs text-slate-400 border-b-0";
+      document.getElementById('tabConsultaBtn').className = "flex-1 py-2.5 text-center font-bold text-xs text-slate-400 border-b-0";
+      document.getElementById('tabEstoqueBtn').className = "flex-1 py-2.5 text-center font-bold text-xs text-slate-400 border-b-0";
+
       if (aba === 'ativos') {
         document.getElementById('abaAtivos').classList.remove('hidden');
-        document.getElementById('abaEstoque').classList.add('hidden');
-        document.getElementById('tabAtivosBtn').className = "flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600";
-        document.getElementById('tabEstoqueBtn').className = "flex-1 py-2 text-center font-bold text-slate-400 border-b-0";
+        document.getElementById('tabAtivosBtn').className = "flex-1 py-2.5 text-center font-bold text-xs text-blue-600 border-b-2 border-blue-600";
+      } else if (aba === 'consulta') {
+        document.getElementById('abaConsulta').classList.remove('hidden');
+        document.getElementById('tabConsultaBtn').className = "flex-1 py-2.5 text-center font-bold text-xs text-blue-600 border-b-2 border-blue-600";
+        renderizarTabelaConsulta();
       } else {
-        document.getElementById('abaAtivos').classList.add('hidden');
         document.getElementById('abaEstoque').classList.remove('hidden');
-        document.getElementById('tabEstoqueBtn').className = "flex-1 py-2 text-center font-bold text-blue-600 border-b-2 border-blue-600";
-        document.getElementById('tabAtivosBtn').className = "flex-1 py-2 text-center font-bold text-slate-400 border-b-0";
+        document.getElementById('tabEstoqueBtn').className = "flex-1 py-2.5 text-center font-bold text-xs text-blue-600 border-b-2 border-blue-600";
       }
     }
 
     function exportarExcel() {
-      const itensComEstoque = estoqueItens.filter(i => i.salvo > 0).map(i => ({
-        "Item": i.item,
-        "Quantidade Total": i.salvo
-      }));
-
+      const itensComEstoque = estoqueItens.filter(i => i.salvo > 0).map(i => ({ "Item": i.item, "Quantidade Total": i.salvo }));
       const totalAtivos = Object.values(registrosPorAba).reduce((acc, arr) => acc + arr.length, 0);
 
       if (totalAtivos === 0 && itensComEstoque.length === 0) {
@@ -536,21 +589,12 @@
       }
 
       const wb = XLSX.utils.book_new();
-
       for (const [nomeAba, lista] of Object.entries(registrosPorAba)) {
-        if (lista.length > 0) {
-          const ws = XLSX.utils.json_to_sheet(lista);
-          XLSX.utils.book_append_sheet(wb, ws, nomeAba);
-        }
+        if (lista.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lista), nomeAba);
       }
+      if (itensComEstoque.length > 0) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(itensComEstoque), "Estoque Geral");
 
-      if (itensComEstoque.length > 0) {
-        const wsEstoque = XLSX.utils.json_to_sheet(itensComEstoque);
-        XLSX.utils.book_append_sheet(wb, wsEstoque, "Estoque Geral");
-      }
-
-      const dataHoje = new Date().toISOString().slice(0,10);
-      XLSX.writeFile(wb, `Inventario_TI_${dataHoje}.xlsx`);
+      XLSX.writeFile(wb, `Inventario_TI_${new Date().toISOString().slice(0,10)}.xlsx`);
     }
   </script>
 </body>
