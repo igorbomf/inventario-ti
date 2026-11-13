@@ -14,7 +14,7 @@
     <h1 class="font-bold text-lg">📱 Inventário TI</h1>
     <div class="flex gap-2">
       <button onclick="limparSessaoCompleta()" class="bg-red-500 hover:bg-red-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold shadow">
-        🗑️ Limpar Testes
+        🗑️ Limpar Sessão
       </button>
       <button onclick="exportarExcel()" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg text-sm font-semibold shadow flex items-center gap-1">
         📊 Exportar
@@ -28,7 +28,6 @@
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
       <h2 class="font-bold text-xs text-slate-500 mb-1 uppercase tracking-wide">Banco de Dados Base (GitHub)</h2>
       <p id="dbStatus" class="text-xs text-blue-600 font-medium">🔄 Carregando base do GitHub...</p>
-      <!-- Botão Opcional para sobrescrever com outro arquivo local se quiser -->
       <details class="mt-2">
         <summary class="text-[10px] text-slate-400 cursor-pointer hover:underline">Carregar outro arquivo manualmente</summary>
         <input type="file" id="dbFileInput" accept=".xlsx, .xls" onchange="carregarBancoManual(event)" class="block w-full text-xs text-slate-500 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
@@ -215,7 +214,18 @@
     ].map(nome => ({ item: nome, digitando: 0, salvo: 0 }));
 
     window.onload = function() {
-      // Tenta baixar automaticamente o arquivo 'base.xlsx' direto do GitHub
+      // 1. Carrega dados salvos da sessão (se houver)
+      const sessaoSalva = localStorage.getItem('inventario_registros_sessao');
+      if (sessaoSalva) {
+        registrosPorAba = JSON.parse(sessaoSalva);
+      }
+
+      const estoqueSalvo = localStorage.getItem('inventario_estoque_sessao');
+      if (estoqueSalvo) {
+        estoqueItens = JSON.parse(estoqueSalvo);
+      }
+
+      // 2. Tenta baixar automaticamente o arquivo 'base.xlsx' direto do GitHub
       fetch('base.xlsx')
         .then(response => {
           if (!response.ok) throw new Error("Arquivo base.xlsx não encontrado no repositório.");
@@ -227,7 +237,6 @@
         })
         .catch(error => {
           console.warn(error);
-          // Fallback: se não achar o base.xlsx, tenta ver se tem salvo na memória do navegador
           const salvo = localStorage.getItem('inventario_banco_base');
           if (salvo) {
             bancoDadosUnificado = JSON.parse(salvo);
@@ -275,10 +284,17 @@
       reader.readAsArrayBuffer(file);
     }
 
+    function salvarSessaoNoNavegador() {
+      localStorage.setItem('inventario_registros_sessao', JSON.stringify(registrosPorAba));
+      localStorage.setItem('inventario_estoque_sessao', JSON.stringify(estoqueItens));
+    }
+
     function limparSessaoCompleta() {
       if (confirm("⚠️ Deseja apagar todos os registros salvos nesta sessão de testes?")) {
         registrosPorAba = { "Computadores": [], "Monitores": [], "Tablet e Celular": [], "Geral": [] };
         estoqueItens.forEach(i => { i.salvo = 0; i.digitando = 0; });
+        localStorage.removeItem('inventario_registros_sessao');
+        localStorage.removeItem('inventario_estoque_sessao');
         renderizarEstoque();
         renderizarTabelaConsulta();
         alert("Sessão limpa com sucesso!");
@@ -432,6 +448,7 @@
       }
 
       registrosPorAba[cat].push(registro);
+      salvarSessaoNoNavegador(); // Salva automaticamente na memória
 
       document.getElementById('campoBusca').value = '';
       document.getElementById('fieldAtivo').value = '';
@@ -501,6 +518,7 @@
     function removerItemConsulta(cat, index) {
       if (confirm("Deseja remover este registro da lista?")) {
         registrosPorAba[cat].splice(index, 1);
+        salvarSessaoNoNavegador();
         renderizarTabelaConsulta();
       }
     }
@@ -541,7 +559,11 @@
           alterado = true;
         }
       });
-      if (alterado) { renderizarEstoque(); alert("✓ Contagem acumulada com sucesso!"); }
+      if (alterado) { 
+        salvarSessaoNoNavegador();
+        renderizarEstoque(); 
+        alert("✓ Contagem acumulada com sucesso!"); 
+      }
       else alert("Adicione quantidade antes de salvar.");
     }
 
@@ -549,6 +571,7 @@
       const nomeItem = prompt("Digite o nome do novo item:");
       if (nomeItem && nomeItem.trim() !== "") {
         estoqueItens.unshift({ item: nomeItem.trim(), digitando: 1, salvo: 0 });
+        salvarSessaoNoNavegador();
         renderizarEstoque();
       }
     }
