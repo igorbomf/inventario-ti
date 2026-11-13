@@ -90,12 +90,44 @@
             <datalist id="listaTiposSugeridos"></datalist>
           </div>
 
-          <!-- Modelo -->
+          <!-- Modelo com Datalist corrigido -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Modelo</label>
             <input list="listaModelosSugeridos" id="fieldModelo" placeholder="Digite ou escolha da lista..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
             <datalist id="listaModelosSugeridos">
-              <option value="Latitude 5480"><option value="Latitude 7280"><option value="Latitude 7290"><option value="Latitude 7370"><option value="Latitude 7410"><option value="Latitude 7420"><option value="Latitude 7440"><option value="Latitude 7450"><option value="Latitude 7490"><option value="Precision 7510"><option value="Precision 7730"><option value="Pro 14 Plus"><option value="Workstation"><option value="Notebook Mod. Anteriores (7400/7490/Outros)"><option value="Samsung - S23B550V"><option value="Samsung - S23A550H"><option value="Samsung - S22B300B"><option value="DELL - P2211H"><option value="DELL - E1910C"><option value="DELL - D2201RC"><option value="Samsung - Sem etiqueta"><option value="Monitor Dell P2417H"><option value="Monitor LG 24MK430H"><option value="Monitor Samsung Essential S4"><option value="Celular Motorola G10"><option value="Celular Motorola G22"><option value="Celular Motorola G7"><option value="Celular Motorola G8"><option value="Celular Motorola G9"><option value="Celular Samsung A36"><option value="Tablet S10+"><option value="Tablet S5+"><option value="Tablet S6+">
+              <option value="Latitude 5480">
+              <option value="Latitude 7280">
+              <option value="Latitude 7290">
+              <option value="Latitude 7370">
+              <option value="Latitude 7410">
+              <option value="Latitude 7420">
+              <option value="Latitude 7440">
+              <option value="Latitude 7450">
+              <option value="Latitude 7490">
+              <option value="Precision 7510">
+              <option value="Precision 7730">
+              <option value="Pro 14 Plus">
+              <option value="Workstation">
+              <option value="Notebook Mod. Anteriores (7400/7490/Outros)">
+              <option value="Samsung - S23B550V">
+              <option value="Samsung - S23A550H">
+              <option value="Samsung - S22B300B">
+              <option value="DELL - P2211H">
+              <option value="DELL - E1910C">
+              <option value="DELL - D2201RC">
+              <option value="Samsung - Sem etiqueta">
+              <option value="Monitor Dell P2417H">
+              <option value="Monitor LG 24MK430H">
+              <option value="Monitor Samsung Essential S4">
+              <option value="Celular Motorola G10">
+              <option value="Celular Motorola G22">
+              <option value="Celular Motorola G7">
+              <option value="Celular Motorola G8">
+              <option value="Celular Motorola G9">
+              <option value="Celular Samsung A36">
+              <option value="Tablet S10+">
+              <option value="Tablet S5+">
+              <option value="Tablet S6+">
             </datalist>
           </div>
 
@@ -131,28 +163,28 @@
             </div>
           </div>
 
-          <!-- Condição e Status -->
+          <!-- Condição e Status atualizados -->
           <div class="grid grid-cols-2 gap-2">
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Condição</label>
               <select id="fieldCondicao" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
-                <option value="">Nenhuma / Uso Normal</option>
-                <option value="Venda funcionário">Venda funcionário</option>
+                <option value="Uso Normal">Uso Normal</option>
                 <option value="Descarte">Descarte</option>
+                <option value="Venda Funcionário">Venda Funcionário</option>
               </select>
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 mb-1">Status</label>
               <select id="fieldStatus" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm">
-                <option value="Bom estado">Bom estado</option>
+                <option value="Novo">Novo</option>
                 <option value="Bom">Bom</option>
                 <option value="Defeito/Manutenção">Defeito/Manutenção</option>
-                <option value="Ruim">Ruim</option>
+                <option value="Descarte">Descarte</option>
               </select>
             </div>
           </div>
 
-          <!-- Observações -->
+          <!-- Observações com "Sem Etiqueta" -->
           <div>
             <label class="block text-xs font-semibold text-slate-600 mb-1">Observações Rápidas</label>
             <div class="flex flex-wrap gap-1.5 mb-2">
@@ -160,6 +192,7 @@
               <button type="button" onclick="addObsTag('Tela quebrada/queimada')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Tela quebrada</button>
               <button type="button" onclick="addObsTag('Bateria ruim')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Bateria ruim</button>
               <button type="button" onclick="addObsTag('Apagado')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Apagado</button>
+              <button type="button" onclick="addObsTag('Sem Etiqueta')" class="px-2 py-1 bg-slate-200 text-slate-700 rounded text-xs hover:bg-blue-100">+ Sem Etiqueta</button>
             </div>
             <textarea id="fieldObs" rows="2" placeholder="Outras observações..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-sm"></textarea>
           </div>
@@ -188,17 +221,23 @@
       </section>
     </div>
 
-    <!-- ABA 3: ESTOQUE GERAL -->
+    <!-- ABA 3: ESTOQUE GERAL (Com campo de busca adicionado) -->
     <div id="abaEstoque" class="space-y-4 hidden">
       <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
         <div class="flex justify-between items-center border-b pb-2">
           <h2 class="font-bold text-base text-slate-800">Contagem de Estoque</h2>
           <button onclick="adicionarItemPersonalizado()" class="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-lg border border-blue-200">+ Novo Item</button>
         </div>
+
+        <!-- Campo de Busca para o Estoque Geral -->
+        <div>
+          <input type="text" id="filtroEstoque" oninput="renderizarEstoque()" placeholder="🔍 Filtrar item do estoque..." class="w-full p-2 bg-slate-50 border border-slate-300 rounded-lg text-xs">
+        </div>
+
         <button onclick="salvarContagemEstoque()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition-colors text-sm flex items-center justify-center gap-2">
           📥 Salvar / Acumular Contagem Atual
         </button>
-        <div id="listaEstoque" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
+        <div id="listaEstoque" class="space-y-2 max-h-[45vh] overflow-y-auto pr-1"></div>
       </section>
     </div>
 
@@ -214,18 +253,12 @@
     ].map(nome => ({ item: nome, digitando: 0, salvo: 0 }));
 
     window.onload = function() {
-      // 1. Carrega dados salvos da sessão (se houver)
       const sessaoSalva = localStorage.getItem('inventario_registros_sessao');
-      if (sessaoSalva) {
-        registrosPorAba = JSON.parse(sessaoSalva);
-      }
+      if (sessaoSalva) registrosPorAba = JSON.parse(sessaoSalva);
 
       const estoqueSalvo = localStorage.getItem('inventario_estoque_sessao');
-      if (estoqueSalvo) {
-        estoqueItens = JSON.parse(estoqueSalvo);
-      }
+      if (estoqueSalvo) estoqueItens = JSON.parse(estoqueSalvo);
 
-      // 2. Tenta baixar automaticamente o arquivo 'base.xlsx' direto do GitHub
       fetch('base.xlsx')
         .then(response => {
           if (!response.ok) throw new Error("Arquivo base.xlsx não encontrado no repositório.");
@@ -448,7 +481,7 @@
       }
 
       registrosPorAba[cat].push(registro);
-      salvarSessaoNoNavegador(); // Salva automaticamente na memória
+      salvarSessaoNoNavegador();
 
       document.getElementById('campoBusca').value = '';
       document.getElementById('fieldAtivo').value = '';
@@ -523,10 +556,21 @@
       }
     }
 
+    // Renderizar Estoque com suporte ao campo de busca
     function renderizarEstoque() {
       const container = document.getElementById('listaEstoque');
+      const filtro = document.getElementById('filtroEstoque').value.toLowerCase().trim();
       container.innerHTML = '';
-      estoqueItens.forEach((item, index) => {
+
+      const filtrados = estoqueItens.map((item, originalIndex) => ({ ...item, originalIndex })).filter(i => i.item.toLowerCase().includes(filtro));
+
+      if (filtrados.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">Nenhum item de estoque encontrado.</p>`;
+        return;
+      }
+
+      filtrados.forEach((item) => {
+        const index = item.originalIndex;
         container.innerHTML += `
           <div class="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
             <div class="pr-2">
