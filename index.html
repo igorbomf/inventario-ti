@@ -24,14 +24,15 @@
 
   <main class="max-w-md mx-auto p-4 space-y-5">
 
-    <!-- 1. Carregar Banco Base -->
+    <!-- Status do Banco Automático -->
     <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <h2 class="font-bold text-xs text-slate-500 mb-2 uppercase tracking-wide">1. Banco de Dados Base (Salvo no Aparelho)</h2>
-      <input type="file" id="dbFileInput" accept=".xlsx, .xls" onchange="carregarBancoDados(event)" class="block w-full text-xs text-slate-500 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
-      <div class="flex justify-between items-center mt-2">
-        <p id="dbStatus" class="text-xs text-emerald-600 font-medium hidden"></p>
-        <button onclick="limparBancoSalvo()" id="btnLimparBase" class="text-[10px] text-red-500 hover:underline hidden">Atualizar Planilha Base</button>
-      </div>
+      <h2 class="font-bold text-xs text-slate-500 mb-1 uppercase tracking-wide">Banco de Dados Base (GitHub)</h2>
+      <p id="dbStatus" class="text-xs text-blue-600 font-medium">🔄 Carregando base do GitHub...</p>
+      <!-- Botão Opcional para sobrescrever com outro arquivo local se quiser -->
+      <details class="mt-2">
+        <summary class="text-[10px] text-slate-400 cursor-pointer hover:underline">Carregar outro arquivo manualmente</summary>
+        <input type="file" id="dbFileInput" accept=".xlsx, .xls" onchange="carregarBancoManual(event)" class="block w-full text-xs text-slate-500 mt-1 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700">
+      </details>
     </section>
 
     <!-- NAVEGAÇÃO ENTRE ABAS PRINCIPAIS -->
@@ -175,24 +176,16 @@
     <div id="abaConsulta" class="space-y-4 hidden">
       <section class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
         <h2 class="font-bold text-base text-slate-800 border-b pb-2">📋 Itens Já Cadastrados</h2>
-        
-        <!-- Filtro da Consulta -->
         <div>
           <input type="text" id="filtroConsulta" oninput="renderizarTabelaConsulta()" placeholder="Filtrar por Ativo, SN, Nome..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm font-mono">
         </div>
-
-        <!-- Seletor da Aba para Visualizar -->
         <div class="flex gap-1 overflow-x-auto pb-1">
           <button onclick="mudarAbaConsulta('Computadores')" id="btnCatComp" class="px-3 py-1 bg-blue-600 text-white text-xs font-bold rounded-lg whitespace-nowrap">Computadores</button>
           <button onclick="mudarAbaConsulta('Monitores')" id="btnCatMon" class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap">Monitores</button>
           <button onclick="mudarAbaConsulta('Tablet e Celular')" id="btnCatCel" class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap">Tablet/Celular</button>
           <button onclick="mudarAbaConsulta('Geral')" id="btnCatGer" class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-lg whitespace-nowrap">Geral</button>
         </div>
-
-        <!-- Lista de Resultados da Consulta -->
-        <div id="listaConsulta" class="space-y-2 max-h-[55vh] overflow-y-auto pr-1">
-          <!-- Injetado via script -->
-        </div>
+        <div id="listaConsulta" class="space-y-2 max-h-[55vh] overflow-y-auto pr-1"></div>
       </section>
     </div>
 
@@ -203,11 +196,9 @@
           <h2 class="font-bold text-base text-slate-800">Contagem de Estoque</h2>
           <button onclick="adicionarItemPersonalizado()" class="text-xs bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-lg border border-blue-200">+ Novo Item</button>
         </div>
-
         <button onclick="salvarContagemEstoque()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl shadow transition-colors text-sm flex items-center justify-center gap-2">
           📥 Salvar / Acumular Contagem Atual
         </button>
-
         <div id="listaEstoque" class="space-y-2 max-h-[50vh] overflow-y-auto pr-1"></div>
       </section>
     </div>
@@ -224,68 +215,64 @@
     ].map(nome => ({ item: nome, digitando: 0, salvo: 0 }));
 
     window.onload = function() {
-      const salvo = localStorage.getItem('inventario_banco_base');
-      if (salvo) {
-        bancoDadosUnificado = JSON.parse(salvo);
-        const statusEl = document.getElementById('dbStatus');
-        statusEl.textContent = `✓ Base ativa (${bancoDadosUnificado.length} itens salvos)`;
-        statusEl.classList.remove('hidden');
-        document.getElementById('btnLimparBase').classList.remove('hidden');
-      }
+      // Tenta baixar automaticamente o arquivo 'base.xlsx' direto do GitHub
+      fetch('base.xlsx')
+        .then(response => {
+          if (!response.ok) throw new Error("Arquivo base.xlsx não encontrado no repositório.");
+          return response.arrayBuffer();
+        })
+        .then(data => {
+          processarBufferExcel(data);
+          document.getElementById('dbStatus').textContent = `✓ Base carregada do GitHub (${bancoDadosUnificado.length} itens)`;
+        })
+        .catch(error => {
+          console.warn(error);
+          // Fallback: se não achar o base.xlsx, tenta ver se tem salvo na memória do navegador
+          const salvo = localStorage.getItem('inventario_banco_base');
+          if (salvo) {
+            bancoDadosUnificado = JSON.parse(salvo);
+            document.getElementById('dbStatus').textContent = `✓ Base ativa (${bancoDadosUnificado.length} itens salvos no aparelho)`;
+          } else {
+            document.getElementById('dbStatus').textContent = `⚠️ Arquivo 'base.xlsx' não encontrado no GitHub. Faça upload manual abaixo.`;
+            document.getElementById('dbStatus').className = "text-xs text-red-500 font-medium";
+          }
+        });
+
       mudarCategoriaFormulario();
       renderizarEstoque();
       renderizarTabelaConsulta();
     };
 
-    function pegarValorColuna(obj, possiveisChaves) {
-      for (let key of Object.keys(obj)) {
-        const keyLimpa = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        for (let alvo of possiveisChaves) {
-          if (keyLimpa === alvo) return obj[key];
-        }
-      }
-      return '';
+    function processarBufferExcel(arrayBuffer) {
+      const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
+      bancoDadosUnificado = [];
+
+      workbook.SheetNames.forEach(sheetName => {
+        const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        const sLower = sheetName.toLowerCase();
+        let categoriaDetectada = "Geral";
+        if (sLower.includes("computador") || sLower.includes("note")) categoriaDetectada = "Computadores";
+        else if (sLower.includes("monitor") || sLower.includes("tv")) categoriaDetectada = "Monitores";
+        else if (sLower.includes("tablet") || sLower.includes("celular") || sLower.includes("mobile")) categoriaDetectada = "Tablet e Celular";
+
+        rows.forEach(r => {
+          bancoDadosUnificado.push({ _abaOrigem: categoriaDetectada, _nomeAbaOriginal: sheetName, raw: r });
+        });
+      });
+
+      localStorage.setItem('inventario_banco_base', JSON.stringify(bancoDadosUnificado));
     }
 
-    function carregarBancoDados(event) {
+    function carregarBancoManual(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        bancoDadosUnificado = [];
-
-        workbook.SheetNames.forEach(sheetName => {
-          const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-          const sLower = sheetName.toLowerCase();
-          let categoriaDetectada = "Geral";
-          if (sLower.includes("computador") || sLower.includes("note")) categoriaDetectada = "Computadores";
-          else if (sLower.includes("monitor") || sLower.includes("tv")) categoriaDetectada = "Monitores";
-          else if (sLower.includes("tablet") || sLower.includes("celular") || sLower.includes("mobile")) categoriaDetectada = "Tablet e Celular";
-
-          rows.forEach(r => {
-            bancoDadosUnificado.push({ _abaOrigem: categoriaDetectada, _nomeAbaOriginal: sheetName, raw: r });
-          });
-        });
-
-        localStorage.setItem('inventario_banco_base', JSON.stringify(bancoDadosUnificado));
-        const statusEl = document.getElementById('dbStatus');
-        statusEl.textContent = `✓ ${bancoDadosUnificado.length} itens salvos no aparelho!`;
-        statusEl.classList.remove('hidden');
-        document.getElementById('btnLimparBase').classList.remove('hidden');
+        processarBufferExcel(e.target.result);
+        document.getElementById('dbStatus').textContent = `✓ ${bancoDadosUnificado.length} itens carregados manualmente!`;
+        document.getElementById('dbStatus').className = "text-xs text-emerald-600 font-medium";
       };
       reader.readAsArrayBuffer(file);
-    }
-
-    function limparBancoSalvo() {
-      if (confirm("Deseja remover a base de dados atual?")) {
-        localStorage.removeItem('inventario_banco_base');
-        bancoDadosUnificado = [];
-        document.getElementById('dbStatus').classList.add('hidden');
-        document.getElementById('btnLimparBase').classList.add('hidden');
-        alert("Base removida.");
-      }
     }
 
     function limparSessaoCompleta() {
@@ -296,6 +283,16 @@
         renderizarTabelaConsulta();
         alert("Sessão limpa com sucesso!");
       }
+    }
+
+    function pegarValorColuna(obj, possiveisChaves) {
+      for (let key of Object.keys(obj)) {
+        const keyLimpa = key.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        for (let alvo of possiveisChaves) {
+          if (keyLimpa === alvo) return obj[key];
+        }
+      }
+      return '';
     }
 
     function buscarAtivoDinamico(termo) {
@@ -436,7 +433,6 @@
 
       registrosPorAba[cat].push(registro);
 
-      // Limpar campos
       document.getElementById('campoBusca').value = '';
       document.getElementById('fieldAtivo').value = '';
       document.getElementById('fieldSN').value = '';
@@ -454,7 +450,6 @@
       alert(`✓ Salvo na aba "${cat}"!`);
     }
 
-    // Gerenciamento da Consulta de Registros
     function mudarAbaConsulta(cat) {
       abaConsultaAtual = cat;
       ['Computadores', 'Monitores', 'Tablet e Celular', 'Geral'].forEach(c => {
